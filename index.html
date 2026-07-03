@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano de Ação TI — Hotel Privê do Atalaia | Julho 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b2e; --panel2:#1c2237; --border:#262d45;
+  --txt:#e6e9f2; --muted:#8b93ab; --accent:#6366f1; --accent2:#818cf8;
+  --ok:#22c55e; --warn:#f59e0b; --crit:#ef4444; --info:#38bdf8; --low:#22c55e;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5}
+.wrap{max-width:1280px;margin:0 auto;padding:28px 22px 60px}
+
+/* HEADER */
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;
+  border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:24px}
+.h-left .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+.h-left h1{font-size:26px;font-weight:800;margin:4px 0 2px}
+.h-left .sub{color:var(--muted);font-size:13px}
+.h-right{text-align:right}
+.periodo{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:inline-block}
+.periodo .lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.periodo .val{font-size:16px;font-weight:700;color:var(--accent2)}
+.updated{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* PROGRESSO GERAL */
+.progress-block{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:22px}
+.progress-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.progress-top .t{font-weight:700;font-size:15px}
+.progress-top .p{font-weight:800;font-size:22px;color:var(--accent2)}
+.bar{height:12px;background:#0a0e1a;border-radius:99px;overflow:hidden;border:1px solid var(--border)}
+.bar>div{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;border-radius:99px;transition:width .5s ease}
+
+/* KPI GRID */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:26px}
+.kpi{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 16px 14px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:var(--kc,var(--accent))}
+.kpi .n{font-size:30px;font-weight:800;line-height:1.1}
+.kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:4px;font-weight:600}
+
+/* SEÇÕES */
+section{margin-bottom:30px}
+h2{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:14px;
+  padding-bottom:8px;border-bottom:1px solid var(--border)}
+h2 .tag{font-size:10px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);
+  padding:2px 8px;border-radius:99px;font-weight:600;letter-spacing:.05em}
+
+/* AGENDA */
+.agenda{display:flex;flex-direction:column;gap:10px}
+.dia{display:grid;grid-template-columns:118px 1fr;gap:14px;align-items:stretch}
+.dia .data{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.dia .data .dd{font-size:22px;font-weight:800;color:var(--accent2)}
+.dia .data .dw{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.dia.weekend .data{border-color:rgba(245,158,11,.5)}
+.dia.weekend .data .dw{color:var(--warn)}
+.evento{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--pc,var(--accent));
+  border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.evt-row{display:flex;flex-direction:column;gap:8px}
+.evento .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.evento .titulo{font-weight:600;font-size:13.5px}
+.evento .hora{font-size:12px;color:var(--muted);white-space:nowrap;font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:rgba(99,102,241,.15);
+  color:var(--accent2);border:1px solid rgba(99,102,241,.35)}
+.chip.local{background:rgba(56,189,248,.12);color:var(--info);border-color:rgba(56,189,248,.3)}
+.chip.dep{background:rgba(245,158,11,.12);color:var(--warn);border-color:rgba(245,158,11,.3)}
+.chip.done{background:rgba(34,197,94,.12);color:var(--ok);border-color:rgba(34,197,94,.3)}
+
+/* TABELA */
+.tbl-wrap{overflow-x:auto;background:var(--panel);border:1px solid var(--border);border-radius:14px}
+table{width:100%;border-collapse:collapse;min-width:980px}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);text-align:left;
+  padding:12px 12px;border-bottom:1px solid var(--border);background:var(--panel2);font-weight:700}
+td{padding:12px;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(99,102,241,.04)}
+.prio{font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;white-space:nowrap;display:inline-block}
+.p-critica{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.35)}
+.p-alta{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.35)}
+.p-media{background:rgba(56,189,248,.12);color:#7dd3fc;border:1px solid rgba(56,189,248,.3)}
+.p-baixa{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+/* BOTÕES DE STATUS */
+.seg{display:inline-flex;background:#0a0e1a;border:1px solid var(--border);border-radius:10px;padding:3px;gap:3px}
+.seg button{background:transparent;border:none;color:var(--muted);font-family:'Inter',sans-serif;
+  font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;cursor:pointer;white-space:nowrap;
+  transition:all .15s ease}
+.seg button:hover{color:var(--txt);background:var(--panel2)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg button.on-nao{background:rgba(239,68,68,.18);color:#f87171;box-shadow:inset 0 0 0 1px rgba(239,68,68,.45)}
+.seg button.on-and{background:rgba(56,189,248,.18);color:#7dd3fc;box-shadow:inset 0 0 0 1px rgba(56,189,248,.45)}
+.seg button.on-conc{background:rgba(34,197,94,.2);color:#4ade80;box-shadow:inset 0 0 0 1px rgba(34,197,94,.5)}
+tr.row-done td{opacity:.55}
+tr.row-done .acao-nome{text-decoration:line-through;text-decoration-color:rgba(74,222,128,.6)}
+.progress-sub{display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.progress-sub b{color:var(--txt)}
+.bar-and{position:absolute;top:0;left:0;height:100%;background:rgba(56,189,248,.35);border-radius:99px}
+.bar{position:relative}
+.bar>div#barGeral{position:relative;z-index:1}
+.acao-nome{font-weight:600}
+.acao-obs{font-size:11.5px;color:var(--muted);margin-top:3px}
+
+/* CARGA */
+.carga{display:flex;flex-direction:column;gap:10px}
+.c-row{display:grid;grid-template-columns:120px 1fr 90px;gap:12px;align-items:center}
+.c-nome{font-weight:600;font-size:13px}
+.c-bar{height:22px;background:#0a0e1a;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.c-bar>div{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:7px;
+  display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:700;min-width:26px}
+.c-bar.over>div{background:linear-gradient(90deg,#dc2626,#f87171)}
+.c-info{font-size:11.5px;color:var(--muted);text-align:right}
+
+/* CARDS RISCOS / LISTAS */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--cc,var(--warn));
+  border-radius:12px;padding:16px}
+.card h3{font-size:13.5px;font-weight:700;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+.card p{font-size:12.5px;color:var(--muted)}
+.card .rec{margin-top:8px;font-size:12.5px;color:var(--txt);background:var(--panel2);border-radius:8px;
+  padding:8px 10px;border:1px solid var(--border)}
+.card .rec b{color:var(--accent2)}
+
+.lista{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:6px 0}
+.lista .item{display:flex;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);align-items:flex-start}
+.lista .item:last-child{border-bottom:none}
+.lista .num{width:24px;height:24px;border-radius:8px;background:var(--accent);color:#fff;display:flex;
+  align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;margin-top:1px}
+.lista.dir .num{background:var(--warn);color:#1a1a1a}
+.lista .item b{display:block;font-size:13px}
+.lista .item span{font-size:12px;color:var(--muted)}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}.dia{grid-template-columns:86px 1fr}}
+
+footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--border);display:flex;
+  justify-content:space-between;color:var(--muted);font-size:11.5px;flex-wrap:wrap;gap:8px}
+.btn-reset{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:8px;
+  padding:6px 12px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;font-weight:600}
+.btn-reset:hover{color:var(--crit);border-color:rgba(239,68,68,.4)}
+@media print{body{background:#fff;color:#000}.btn-reset{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="h-left">
+    <div class="eyebrow">Grupo Martins · Tecnologia da Informação</div>
+    <h1>Plano de Ação — Hotel Privê do Atalaia</h1>
+    <div class="sub">Infraestrutura, integrações e capacitação · Restaurante incluído</div>
+  </div>
+  <div class="h-right">
+    <div class="periodo">
+      <div class="lbl">Janela de execução</div>
+      <div class="val">07 → 21 / 07 / 2026</div>
+    </div>
+    <div class="updated" id="lastUpdate">—</div>
+  </div>
+</header>
+
+<div class="progress-block">
+  <div class="progress-top">
+    <div class="t">Avanço geral do plano</div>
+    <div class="p" id="pctGeral">0%</div>
+  </div>
+  <div class="bar"><div class="bar-and" id="barAndamento"></div><div id="barGeral"></div></div>
+  <div class="progress-sub" id="progressSub"></div>
+</div>
+
+<div class="kpis">
+  <div class="kpi" style="--kc:var(--accent)"><div class="n" id="kTotal">10</div><div class="l">Total de ações</div></div>
+  <div class="kpi" style="--kc:var(--ok)"><div class="n" id="kConcluidas">0</div><div class="l">Concluídas</div></div>
+  <div class="kpi" style="--kc:var(--info)"><div class="n" id="kAndamento">0</div><div class="l">Em andamento</div></div>
+  <div class="kpi" style="--kc:var(--crit)"><div class="n" id="kNao">10</div><div class="l">Não iniciadas</div></div>
+  <div class="kpi" style="--kc:var(--crit)"><div class="n" id="kCriticas">3</div><div class="l">Críticas pendentes</div></div>
+  <div class="kpi" style="--kc:var(--warn)"><div class="n" id="kAtrasadas">0</div><div class="l">Atrasadas</div></div>
+</div>
+
+<!-- AGENDA -->
+<section>
+  <h2>📅 Agenda de execução <span class="tag">por data e responsável</span></h2>
+  <div class="agenda" id="agenda"></div>
+</section>
+
+<!-- PLANO DE AÇÃO -->
+<section>
+  <h2>🗂️ Plano de ação priorizado <span class="tag">status editável — salvo automaticamente</span></h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Prioridade</th><th>Atividade</th><th>Responsável</th><th>Prazo</th><th>Status</th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<div class="two-col">
+  <!-- CARGA -->
+  <section>
+    <h2>👥 Carga por responsável <span class="tag">ações pendentes</span></h2>
+    <div class="carga" id="carga"></div>
+  </section>
+
+  <!-- AÇÕES IMEDIATAS -->
+  <section>
+    <h2>⚡ Ações imediatas <span class="tag">antes de 07/07</span></h2>
+    <div class="lista">
+      <div class="item"><div class="num">1</div><div><b>Confirmar estoque dos 6 roteadores WiFi 6</b><span>Sem equipamento em mãos, as ações 1, 7 e 4 caem em efeito dominó.</span></div></div>
+      <div class="item"><div class="num">2</div><div><b>Antecipar revisão de roteadores (ação 1) para 07/07</b><span>Cria folga de 1 dia antes da instalação WiFi 6.</span></div></div>
+      <div class="item"><div class="num">3</div><div><b>Confirmar equipe no sábado 11/07 e domingo 19/07</b><span>Nadia e Elton têm ações agendadas no fim de semana.</span></div></div>
+      <div class="item"><div class="num">4</div><div><b>Disparar cotações de CFTV (16 câmeras)</b><span>Fornecedor externo exige lead time — iniciar esta semana.</span></div></div>
+      <div class="item"><div class="num">5</div><div><b>Validar acesso e materiais do Escritório Belém</b><span>Janela de apenas 2h no dia 07/07 — sem margem para imprevistos.</span></div></div>
+    </div>
+  </section>
+</div>
+
+<!-- RISCOS -->
+<section>
+  <h2>⚠️ Gargalos e riscos do cronograma</h2>
+  <div class="cards">
+    <div class="card" style="--cc:var(--ok)">
+      <h3>✅ Sobreposição ações 1 → 7 — RESOLVIDA</h3>
+      <p>No cronograma revisado, a revisão dos roteadores foi antecipada para terminar em <b>09/07 às 17h</b>, criando folga de 1 dia antes da instalação WiFi 6 (10/07). Risco mitigado.</p>
+      <div class="rec"><b>Manter:</b> se a revisão do dia 09 encontrar problema grave de VLAN/firewall, avisar Cleiton no mesmo dia para decidir se a instalação de 10/07 é mantida ou desliza para 11/07.</div>
+    </div>
+    <div class="card" style="--cc:var(--crit)">
+      <h3>🔴 Ponto único de falha: equipamentos WiFi 6</h3>
+      <p>Indisponibilidade física dos roteadores na data derruba em cascata as ações 1, 7, 4 e 2 — o núcleo do plano.</p>
+      <div class="rec"><b>Recomendação:</b> confirmação de estoque até 07/07 + plano B de reagendamento para 11/07.</div>
+    </div>
+    <div class="card" style="--cc:var(--warn)">
+      <h3>🟠 Sobrecarga de Nadia (5 de 10 ações)</h3>
+      <p>Presente nas ações 2, 5, 6, 8 e 10, incluindo sábado e domingo. Qualquer indisponibilidade afeta 50% do plano.</p>
+      <div class="rec"><b>Recomendação:</b> validar banco de horas e definir substituto para as ações 2 e 8.</div>
+    </div>
+    <div class="card" style="--cc:var(--warn)">
+      <h3>🟠 Dependência em cascata → Smart TVs (ação 4)</h3>
+      <p>A revisão das TVs (14/07) só faz sentido com a rede nova estabilizada. Se a WiFi 6 atrasar, a ação 4 desliza junto — hoje não formalizado.</p>
+      <div class="rec"><b>Recomendação:</b> registrar predecessora 7 → 4 e comunicar à Fatima.</div>
+    </div>
+    <div class="card" style="--cc:var(--warn)">
+      <h3>🟠 Sem buffer no fim da janela (SAGA)</h3>
+      <p>A ação 10 ocorre em 20/07, um dia antes do fim do período. Falha que dependa do fornecedor da fechadura não terá tempo de correção.</p>
+      <div class="rec"><b>Recomendação:</b> pré-autorizar escalonamento junto ao fornecedor SAGA.</div>
+    </div>
+    <div class="card" style="--cc:var(--info)">
+      <h3>🔵 Dependência externa: CFTV</h3>
+      <p>Levantamento das 16 câmeras (ação 8) depende de fornecedor e decisão de CAPEX. Risco de virar pendência sem dono.</p>
+      <div class="rec"><b>Recomendação:</b> prazo de decisão da diretoria até 31/07 após entrega do orçamento.</div>
+    </div>
+  </div>
+</section>
+
+<!-- DIRETORIA -->
+<section>
+  <h2>🏛️ Atenção da diretoria <span class="tag">decisões necessárias</span></h2>
+  <div class="lista dir">
+    <div class="item"><div class="num">1</div><div><b>CFTV — 16 câmeras (CAPEX)</b><span>Aprovar verba estimada e prazo de decisão pós-orçamento (sugestão: até 31/07).</span></div></div>
+    <div class="item"><div class="num">2</div><div><b>Fechadura SAGA — escalonamento</b><span>Autorizar acionamento contratual/suporte do fornecedor caso a análise identifique falha estrutural.</span></div></div>
+    <div class="item"><div class="num">3</div><div><b>Trabalho em fim de semana</b><span>Validar compensação/banco de horas da equipe (Nadia/Elton — 11 e 19/07) e eventual redistribuição.</span></div></div>
+    <div class="item"><div class="num">4</div><div><b>Logística dos roteadores WiFi 6</b><span>Priorizar liberação de compra/entrega caso equipamentos ainda não estejam disponíveis.</span></div></div>
+  </div>
+</section>
+
+<footer>
+  <div>Elielson Nascimento — Administrador de Sistemas · Grupo Martins &nbsp;|&nbsp; Aprovação: Eliezer Rabelo — Diretoria</div>
+  <button class="btn-reset" onclick="resetStatus()">Limpar status salvos</button>
+</footer>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'plano_hotel_jul2026_v1';
+
+const ACOES = [
+  {id:1, empresa:'HOTEL', nome:'Revisão roteadores rede hóspedes — áreas 100, 200, 300 e 400', resp:['ELIELSON'], ini:'2026-07-08', fim:'2026-07-09', hora:'08/07 10h → 09/07 17h', local:'RESTAURANTE', prio:'critica', obs:'VLAN, endereçamento IP, firewall e controle de acesso. Termina 09/07 — folga de 1 dia antes da instalação WiFi 6 (ação 7). ✔ Cronograma revisado.', dep:'→ libera ação 7'},
+  {id:2, empresa:'HOTEL', nome:'Treinamento Hotspot Veja IT — setor de manutenção', resp:['ELTON','NADIA'], ini:'2026-07-11', fim:'2026-07-11', hora:'11/07 15h', local:'HOTEL', prio:'media', obs:'Sábado — confirmar disponibilidade da equipe de manutenção.', dep:null},
+  {id:3, empresa:'RESTAURANTE', nome:'Revisão rede lógica/física — smartphones de pedidos', resp:['ORLANDO'], ini:'2026-07-13', fim:'2026-07-13', hora:'13/07 11h → 17h', local:'RESTAURANTE', prio:'alta', obs:'Impacto direto no faturamento. Testar em horário de baixo movimento.', dep:null},
+  {id:4, empresa:'HOTEL', nome:'Revisão de todas as Smart TVs com acesso à internet', resp:['FATIMA'], ini:'2026-07-14', fim:'2026-07-14', hora:'14/07 11h → 17h', local:'HOTEL', prio:'media', obs:'Depende da rede WiFi 6 estabilizada (ações 1 e 7).', dep:'depende de 1 e 7'},
+  {id:5, empresa:'HOTEL', nome:'Treinamento Robotiz e Colibri — gerência do hotel', resp:['NADIA'], ini:'2026-07-15', fim:'2026-07-15', hora:'15/07 14h → 18h', local:'HOTEL', prio:'media', obs:'Preparar material antecipadamente; gravar sessão para reuso.', dep:null},
+  {id:6, empresa:'RESTAURANTE', nome:'Revisão de requisição, baixa de estoque e ficha técnica (integração)', resp:['ORLANDO','NADIA'], ini:'2026-07-16', fim:'2026-07-18', hora:'16/07 10h → 18/07 17h', local:'HOTEL', prio:'critica', obs:'Erros de integração geram impacto fiscal/custo. Checklist formal + teste ponta a ponta.', dep:null},
+  {id:7, empresa:'HOTEL', nome:'Instalação de 6 roteadores profissionais WiFi 6 — rede hóspedes', resp:['ELIELSON','CLEITON'], ini:'2026-07-10', fim:'2026-07-10', hora:'10/07 10h → 18h', local:'HOTEL', prio:'critica', obs:'Confirmar estoque até 07/07. Plano B: reagendar 11/07.', dep:'depende de 1'},
+  {id:8, empresa:'HOTEL', nome:'Levantamento para 16 câmeras de segurança (orçamento CFTV)', resp:['NADIA'], ini:'2026-07-19', fim:'2026-07-19', hora:'19/07 11h → 18h', local:'HOTEL', prio:'baixa', obs:'Domingo. Dependência externa (fornecedor) + decisão de CAPEX da diretoria.', dep:'fornecedor externo'},
+  {id:9, empresa:'HOTEL', nome:'Verificar cabeamento e estrutura da rede interna — Escritório Belém', resp:['MARILIA'], ini:'2026-07-07', fim:'2026-07-07', hora:'07/07 10h → 12h', local:'HOTEL', prio:'alta', obs:'Primeira ação do plano — janela curta de 2h.', dep:'abre o plano'},
+  {id:10, empresa:'HOTEL', nome:'Treinamento / análise integração Fechadura SAGA', resp:['ELTON','NADIA'], ini:'2026-07-20', fim:'2026-07-20', hora:'20/07 10h → 17h', local:'HOTEL', prio:'alta', obs:'Última ação técnica, sem buffer. Escalonar fornecedor SAGA se falha estrutural.', dep:null}
+];
+
+const PRIO_LABEL = {critica:'🔴 Crítica', alta:'🟠 Alta', media:'🟡 Média', baixa:'🟢 Baixa'};
+const PRIO_COLOR = {critica:'var(--crit)', alta:'var(--warn)', media:'var(--info)', baixa:'var(--low)'};
+const STATUS_OPTS = ['NÃO INICIADA','EM ANDAMENTO','CONCLUÍDA','CANCELADA'];
+const DIAS = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+
+function loadStatus(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch(e){ return {}; }
+}
+function saveStatus(map){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(map)); }catch(e){}
+}
+let statusMap = loadStatus();
+function getStatus(id){ return statusMap[id] || 'NÃO INICIADA'; }
+
+function statusClass(s){
+  if(s==='CONCLUÍDA') return 's-concluida';
+  if(s==='EM ANDAMENTO') return 's-andamento';
+  if(s==='CANCELADA') return '';
+  return 's-nao';
+}
+
+function esc(t){ const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+
+/* ===== TABELA ===== */
+function renderTable(){
+  const order = {critica:0, alta:1, media:2, baixa:3};
+  const rows = [...ACOES].sort((a,b)=> order[a.prio]-order[b.prio] || a.ini.localeCompare(b.ini));
+  const tb = document.getElementById('tbody');
+  tb.innerHTML = rows.map(a=>{
+    const s = getStatus(a.id);
+    return `<tr class="${s==='CONCLUÍDA'?'row-done':''}">
+      <td><b>${a.id}</b></td>
+      <td><span class="prio p-${a.prio}">${PRIO_LABEL[a.prio]}</span></td>
+      <td><div class="acao-nome">${esc(a.nome)}</div><div class="acao-obs">${esc(a.obs)}</div></td>
+      <td>${a.resp.map(r=>`<span class="chip">${r}</span>`).join(' ')}</td>
+      <td style="white-space:nowrap">${a.hora}</td>
+      <td>
+        <div class="seg" role="group" aria-label="Status da ação ${a.id}">
+          <button data-id="${a.id}" data-s="NÃO INICIADA" class="${s==='NÃO INICIADA'?'on-nao':''}">Não iniciada</button>
+          <button data-id="${a.id}" data-s="EM ANDAMENTO" class="${s==='EM ANDAMENTO'?'on-and':''}">Em andamento</button>
+          <button data-id="${a.id}" data-s="CONCLUÍDA" class="${s==='CONCLUÍDA'?'on-conc':''}">✓ Concluída</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  tb.querySelectorAll('.seg button').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      statusMap[e.currentTarget.dataset.id] = e.currentTarget.dataset.s;
+      saveStatus(statusMap);
+      renderAll();
+    });
+  });
+}
+
+/* ===== AGENDA ===== */
+function renderAgenda(){
+  const byDate = {};
+  ACOES.forEach(a=>{
+    (byDate[a.ini] = byDate[a.ini] || []).push(a);
+  });
+  const dates = Object.keys(byDate).sort();
+  const el = document.getElementById('agenda');
+  el.innerHTML = dates.map(d=>{
+    const dt = new Date(d+'T12:00:00');
+    const dow = dt.getDay();
+    const weekend = (dow===0 || dow===6);
+    const evts = byDate[d].map(a=>{
+      const s = getStatus(a.id);
+      const done = s==='CONCLUÍDA';
+      return `<div class="evento" style="--pc:${PRIO_COLOR[a.prio]};${done?'opacity:.55':''}">
+        <div class="top">
+          <div class="titulo">${done?'✅ ':''}#${a.id} · ${esc(a.nome)}</div>
+          <div class="hora">${a.hora}</div>
+        </div>
+        <div class="chips">
+          ${a.resp.map(r=>`<span class="chip">👤 ${r}</span>`).join('')}
+          <span class="chip local">📍 ${a.local}</span>
+          ${a.dep?`<span class="chip dep">🔗 ${a.dep}</span>`:''}
+          ${done?`<span class="chip done">Concluída</span>`:''}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="dia ${weekend?'weekend':''}">
+      <div class="data"><div class="dd">${String(dt.getDate()).padStart(2,'0')}/07</div><div class="dw">${DIAS[dow]}${weekend?' ⚠️':''}</div></div>
+      <div class="evt-row">${evts}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ===== KPIs ===== */
+function renderKPIs(){
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  let conc=0, and=0, nao=0, canc=0, atras=0, critPend=0;
+  ACOES.forEach(a=>{
+    const s = getStatus(a.id);
+    if(s==='CONCLUÍDA') conc++;
+    else if(s==='EM ANDAMENTO') and++;
+    else if(s==='CANCELADA') canc++;
+    else nao++;
+    const fim = new Date(a.fim+'T23:59:59');
+    if(s!=='CONCLUÍDA' && s!=='CANCELADA' && fim < hoje) atras++;
+    if(a.prio==='critica' && s!=='CONCLUÍDA' && s!=='CANCELADA') critPend++;
+  });
+  const validas = ACOES.length - canc;
+  const pct = validas>0 ? Math.round(conc/validas*100) : 0;
+  const pctExec = validas>0 ? Math.round((conc + and*0.5)/validas*100) : 0;
+  document.getElementById('kTotal').textContent = ACOES.length;
+  document.getElementById('kConcluidas').textContent = conc;
+  document.getElementById('kAndamento').textContent = and;
+  document.getElementById('kNao').textContent = nao;
+  document.getElementById('kCriticas').textContent = critPend;
+  document.getElementById('kAtrasadas').textContent = atras;
+  document.getElementById('pctGeral').textContent = pct+'%';
+  document.getElementById('barGeral').style.width = pct+'%';
+  document.getElementById('barAndamento').style.width = pctExec+'%';
+  document.getElementById('progressSub').innerHTML =
+    `<span>✅ Concluídas: <b>${conc}/${validas}</b></span>`+
+    `<span>⏳ Em andamento: <b>${and}</b></span>`+
+    `<span>🚧 Não iniciadas: <b>${nao}</b></span>`+
+    `<span>📈 Execução ponderada (andamento = 50%): <b>${pctExec}%</b></span>`;
+}
+
+/* ===== CARGA ===== */
+function renderCarga(){
+  const map = {};
+  ACOES.forEach(a=>{
+    const s = getStatus(a.id);
+    a.resp.forEach(r=>{
+      map[r] = map[r] || {total:0, pend:0};
+      map[r].total++;
+      if(s!=='CONCLUÍDA' && s!=='CANCELADA') map[r].pend++;
+    });
+  });
+  const max = Math.max(...Object.values(map).map(v=>v.total), 1);
+  const rows = Object.entries(map).sort((a,b)=>b[1].total-a[1].total);
+  document.getElementById('carga').innerHTML = rows.map(([nome,v])=>{
+    const w = Math.round(v.total/max*100);
+    const over = v.total>=4;
+    return `<div class="c-row">
+      <div class="c-nome">${nome}${over?' ⚠️':''}</div>
+      <div class="c-bar ${over?'over':''}"><div style="width:${w}%">${v.total}</div></div>
+      <div class="c-info">${v.pend} pendente${v.pend!==1?'s':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderAll(){
+  renderTable();
+  renderAgenda();
+  renderKPIs();
+  renderCarga();
+  document.getElementById('lastUpdate').textContent =
+    'Atualizado em ' + new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function resetStatus(){
+  if(confirm('Limpar todos os status salvos e voltar ao estado inicial (NÃO INICIADA)?')){
+    statusMap = {};
+    saveStatus(statusMap);
+    renderAll();
+  }
+}
+
+renderAll();
+</script>
+</body>
+</html>
