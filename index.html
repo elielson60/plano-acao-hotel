@@ -42,6 +42,34 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:16p
 .kpi::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:var(--kc,var(--accent))}
 .kpi .n{font-size:30px;font-weight:800;line-height:1.1}
 .kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:4px;font-weight:600}
+.kpi{cursor:pointer;transition:transform .12s ease, border-color .12s ease}
+.kpi:hover{transform:translateY(-2px);border-color:var(--accent)}
+.kpi::after{content:'ver ➜';position:absolute;bottom:8px;right:12px;font-size:9.5px;color:var(--muted);
+  opacity:0;transition:opacity .12s ease;font-weight:600;letter-spacing:.05em}
+.kpi:hover::after{opacity:1}
+
+/* MODAL DRILL-DOWN */
+.modal-bg{position:fixed;inset:0;background:rgba(5,8,16,.75);backdrop-filter:blur(3px);z-index:50;
+  display:none;align-items:flex-start;justify-content:center;padding:60px 16px 40px;overflow-y:auto}
+.modal-bg.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:16px;max-width:720px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;
+  border-bottom:1px solid var(--border)}
+.modal-head h3{font-size:15px;font-weight:800}
+.modal-head .count{font-size:12px;color:var(--muted);font-weight:600;margin-left:8px}
+.modal-close{background:var(--panel2);border:1px solid var(--border);color:var(--muted);width:30px;height:30px;
+  border-radius:8px;cursor:pointer;font-size:14px;font-weight:700;font-family:'Inter',sans-serif}
+.modal-close:hover{color:var(--txt);border-color:var(--accent)}
+.modal-body{padding:8px 0;max-height:60vh;overflow-y:auto}
+.m-item{display:flex;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);align-items:flex-start}
+.m-item:last-child{border-bottom:none}
+.m-item .m-id{width:28px;height:28px;border-radius:8px;background:var(--panel2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--accent2);flex-shrink:0}
+.m-item .m-nome{font-weight:600;font-size:13px}
+.m-item .m-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;align-items:center}
+.m-item .m-prazo{font-size:11.5px;color:var(--muted);font-weight:600}
+.m-empty{padding:28px 20px;text-align:center;color:var(--muted);font-size:13px}
 
 /* SEÇÕES */
 section{margin-bottom:30px}
@@ -173,12 +201,23 @@ footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--border);displ
 </div>
 
 <div class="kpis">
-  <div class="kpi" style="--kc:var(--accent)"><div class="n" id="kTotal">10</div><div class="l">Total de ações</div></div>
-  <div class="kpi" style="--kc:var(--ok)"><div class="n" id="kConcluidas">0</div><div class="l">Concluídas</div></div>
-  <div class="kpi" style="--kc:var(--info)"><div class="n" id="kAndamento">0</div><div class="l">Em andamento</div></div>
-  <div class="kpi" style="--kc:var(--crit)"><div class="n" id="kNao">10</div><div class="l">Não iniciadas</div></div>
-  <div class="kpi" style="--kc:var(--crit)"><div class="n" id="kCriticas">3</div><div class="l">Críticas pendentes</div></div>
-  <div class="kpi" style="--kc:var(--warn)"><div class="n" id="kAtrasadas">0</div><div class="l">Atrasadas</div></div>
+  <div class="kpi" style="--kc:var(--accent)" onclick="openKpi('total')"><div class="n" id="kTotal">10</div><div class="l">Total de ações</div></div>
+  <div class="kpi" style="--kc:var(--ok)" onclick="openKpi('concluidas')"><div class="n" id="kConcluidas">0</div><div class="l">Concluídas</div></div>
+  <div class="kpi" style="--kc:var(--info)" onclick="openKpi('andamento')"><div class="n" id="kAndamento">0</div><div class="l">Em andamento</div></div>
+  <div class="kpi" style="--kc:var(--crit)" onclick="openKpi('nao')"><div class="n" id="kNao">10</div><div class="l">Não iniciadas</div></div>
+  <div class="kpi" style="--kc:var(--crit)" onclick="openKpi('criticas')"><div class="n" id="kCriticas">3</div><div class="l">Críticas pendentes</div></div>
+  <div class="kpi" style="--kc:var(--warn)" onclick="openKpi('atrasadas')"><div class="n" id="kAtrasadas">0</div><div class="l">Atrasadas</div></div>
+</div>
+
+<!-- MODAL DRILL-DOWN -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeKpi()">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <h3 id="modalTitle">—<span class="count" id="modalCount"></span></h3>
+      <button class="modal-close" onclick="closeKpi()" aria-label="Fechar">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
 </div>
 
 <!-- AGENDA -->
@@ -456,6 +495,56 @@ function resetStatus(){
     renderAll();
   }
 }
+
+/* ===== DRILL-DOWN DOS KPIs ===== */
+const KPI_DEFS = {
+  total:      {titulo:'📊 Todas as ações',        filtro: a => true},
+  concluidas: {titulo:'✅ Ações concluídas',       filtro: a => getStatus(a.id)==='CONCLUÍDA'},
+  andamento:  {titulo:'⏳ Ações em andamento',     filtro: a => getStatus(a.id)==='EM ANDAMENTO'},
+  nao:        {titulo:'🚧 Ações não iniciadas',    filtro: a => getStatus(a.id)==='NÃO INICIADA'},
+  criticas:   {titulo:'🔴 Críticas pendentes',     filtro: a => a.prio==='critica' && getStatus(a.id)!=='CONCLUÍDA' && getStatus(a.id)!=='CANCELADA'},
+  atrasadas:  {titulo:'⚠️ Ações atrasadas',        filtro: a => {
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const s = getStatus(a.id);
+    return s!=='CONCLUÍDA' && s!=='CANCELADA' && new Date(a.fim+'T23:59:59') < hoje;
+  }}
+};
+
+function openKpi(tipo){
+  const def = KPI_DEFS[tipo];
+  if(!def) return;
+  const lista = ACOES.filter(def.filtro).sort((a,b)=>a.ini.localeCompare(b.ini));
+  document.getElementById('modalTitle').innerHTML =
+    def.titulo + `<span class="count" id="modalCount">${lista.length} tarefa${lista.length!==1?'s':''}</span>`;
+  const body = document.getElementById('modalBody');
+  if(lista.length===0){
+    body.innerHTML = `<div class="m-empty">Nenhuma tarefa nesta categoria no momento. 👍</div>`;
+  } else {
+    body.innerHTML = lista.map(a=>{
+      const s = getStatus(a.id);
+      return `<div class="m-item">
+        <div class="m-id">${a.id}</div>
+        <div>
+          <div class="m-nome">${esc(a.nome)}</div>
+          <div class="m-meta">
+            <span class="prio p-${a.prio}">${PRIO_LABEL[a.prio]}</span>
+            ${a.resp.map(r=>`<span class="chip">👤 ${r}</span>`).join('')}
+            <span class="m-prazo">📅 ${a.hora}</span>
+            <span class="chip ${s==='CONCLUÍDA'?'done':(s==='EM ANDAMENTO'?'local':'dep')}">${s}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('modalBg').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeKpi(){
+  document.getElementById('modalBg').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeKpi(); });
 
 renderAll();
 </script>
