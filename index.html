@@ -60,9 +60,17 @@
 
   /* ===== NAV ===== */
   .topnav{position:sticky; top:0; z-index:50; background:rgba(255,255,255,0.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); margin-bottom:24px;}
-  .topnav-inner{max-width:1280px; margin:0 auto; padding:12px 28px; display:flex; gap:4px; flex-wrap:wrap;}
-  .topnav a{color:var(--navy2); text-decoration:none; font-size:12.5px; font-weight:700; padding:7px 13px; border-radius:7px;}
-  .topnav a:hover{background:var(--blue-pale);}
+  .topnav-inner{max-width:1280px; margin:0 auto; padding:12px 28px; display:flex; gap:8px; flex-wrap:wrap;}
+  .topnav a{
+    color:var(--navy2); text-decoration:none; font-size:12.5px; font-weight:700;
+    padding:8px 16px; border-radius:999px; border:1.5px solid var(--border);
+    background:var(--white); transition:all .15s ease; white-space:nowrap;
+  }
+  .topnav a:hover{background:var(--blue-pale); border-color:var(--blue-lt);}
+  .topnav a.active{
+    background:linear-gradient(135deg, var(--navy) 0%, var(--blue) 140%);
+    border-color:transparent; color:#fff; box-shadow:0 3px 10px rgba(46,134,222,0.35);
+  }
 
   /* ===== SECTION ===== */
   .section{margin-bottom:36px; scroll-margin-top:60px;}
@@ -228,9 +236,18 @@
     .cover h1{font-size:20px; max-width:100%;}
     .cover p{font-size:12.5px;}
     .cover-meta{min-width:0; width:100%;}
-    .topnav-inner{padding:10px 14px; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+    .topnav{position:relative;}
+    .topnav-inner{
+      padding:10px 14px; flex-wrap:nowrap; gap:7px; overflow-x:auto;
+      -webkit-overflow-scrolling:touch; scrollbar-width:none;
+      scroll-snap-type:x proximity;
+    }
     .topnav-inner::-webkit-scrollbar{display:none;}
-    .topnav-inner a{flex-shrink:0;}
+    .topnav-inner a{flex-shrink:0; font-size:12px; padding:7px 14px; scroll-snap-align:start;}
+    .topnav::after{
+      content:""; position:absolute; top:0; right:0; bottom:0; width:28px; pointer-events:none;
+      background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.95));
+    }
     .section-head h2{font-size:17px;}
     .kpis{grid-template-columns:repeat(2,1fr); gap:10px;}
     .filters{flex-direction:column; align-items:stretch;}
@@ -934,6 +951,44 @@ function renderAll(){
   renderInsights(agg);
 }
 renderAll();
+
+// ===== Active nav pill on scroll =====
+(function(){
+  const navLinks = Array.from(document.querySelectorAll('.topnav-inner a'));
+  const sections = navLinks
+    .map(a => document.getElementById(a.getAttribute('href').slice(1)))
+    .filter(Boolean);
+  if(!sections.length) return;
+
+  const navScroller = document.querySelector('.topnav-inner');
+
+  function setActive(id){
+    navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+    const activeLink = navLinks.find(a => a.getAttribute('href') === '#' + id);
+    // Scroll only the horizontal nav strip into view — never the page itself.
+    if(activeLink && navScroller){
+      const linkLeft = activeLink.offsetLeft;
+      const linkRight = linkLeft + activeLink.offsetWidth;
+      const viewLeft = navScroller.scrollLeft;
+      const viewRight = viewLeft + navScroller.clientWidth;
+      if(linkLeft < viewLeft || linkRight > viewRight){
+        navScroller.scrollTo({
+          left: linkLeft - (navScroller.clientWidth - activeLink.offsetWidth) / 2,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting) setActive(entry.target.id);
+    });
+  }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+
+  sections.forEach(sec => observer.observe(sec));
+  setActive(sections[0].id);
+})();
 </script>
 </body>
 </html>
