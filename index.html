@@ -142,7 +142,7 @@
   tbody tr:nth-child(even){background:#fafcfe;}
   tbody tr:hover{background:var(--blue-pale);}
   .table-scroll{max-height:460px; overflow-y:auto; overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--border); border-radius:10px;}
-  .table-scroll table{min-width:960px;}
+  .table-scroll table{min-width:1180px;}
   .num-cell{font-weight:700; color:var(--muted2);}
   .desc-cell{max-width:220px;}
 
@@ -160,6 +160,12 @@
 
   input[type=range].pct-slider{width:70px; vertical-align:middle;}
   .pct-label{font-size:11px; font-weight:700; color:var(--navy); margin-left:4px;}
+
+  input.agenda-data, input.agenda-hora{
+    font-family:var(--inter); font-size:11px; color:var(--navy2); background:var(--blue-pale);
+    border:1px solid var(--border); border-radius:7px; padding:4px 6px; width:100%; max-width:118px;
+  }
+  input.agenda-data:hover, input.agenda-hora:hover{border-color:var(--blue-lt);}
 
   /* ===== FILTERS ===== */
   .filters{display:flex; gap:9px; margin-bottom:14px; flex-wrap:wrap;}
@@ -333,7 +339,7 @@
       <div class="edit-hint">💡 Clique no status de qualquer linha para atualizar durante a execução — os indicadores recalculam na hora.</div>
       <div class="table-scroll">
         <table>
-          <thead><tr><th>#</th><th>Empresa</th><th>Grupo</th><th>Atividade</th><th>Prioridade</th><th>Dia</th><th>Resp. Principal</th><th>Resp. Apoio</th><th>Status</th><th>%</th></tr></thead>
+          <thead><tr><th>#</th><th>Empresa</th><th>Grupo</th><th>Atividade</th><th>Prioridade</th><th>Dia sugerido</th><th>Resp. Principal</th><th>Resp. Apoio</th><th>Status</th><th>%</th><th>Data confirmada</th><th>Horário confirmado</th></tr></thead>
           <tbody id="tableBody"></tbody>
         </table>
       </div>
@@ -721,15 +727,33 @@ const STORAGE_KEY = 'viagemPriveNov2026_state';
 function loadState(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
 function saveState(s){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }catch(e){} }
 let state = loadState();
-// state shape: { status:{id:status}, pct:{id:pct}, checklist:{id:bool} }
+// state shape: { status:{id:status}, pct:{id:pct}, checklist:{id:bool}, agendaData:{id:'YYYY-MM-DD'}, agendaHora:{id:'HH:MM'} }
 state.status = state.status || {};
 state.pct = state.pct || {};
 state.checklist = state.checklist || {};
+state.agendaData = state.agendaData || {};
+state.agendaHora = state.agendaHora || {};
 
 ATIVIDADES.forEach(a=>{
   if(state.status[a.id]) a.status = state.status[a.id];
   if(state.pct[a.id] !== undefined) a.pct = state.pct[a.id];
+  if(state.agendaData[a.id]) a.dataConfirmada = state.agendaData[a.id];
+  if(state.agendaHora[a.id]) a.horarioConfirmado = state.agendaHora[a.id];
 });
+
+// Converte "DD/MM/YYYY" (como a planilha exibe) <-> "YYYY-MM-DD" (formato do <input type=date>)
+function brDateToIso(s){
+  if(!s) return '';
+  const m = String(s).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(!m) return '';
+  return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+}
+function normalizeHora(s){
+  if(!s) return '';
+  const m = String(s).trim().match(/^(\d{1,2}):(\d{2})/);
+  if(!m) return '';
+  return `${m[1].padStart(2,'0')}:${m[2]}`;
+}
 
 // ===== Shared sync via Google Sheet (Apps Script Web App) =====
 // Status and Checklist are shared across the whole team through this endpoint.
@@ -776,6 +800,20 @@ async function syncPull(silent){
       }
       if(row['Checklist'] === true || row['Checklist'] === 'TRUE' || row['Checklist'] === false || row['Checklist'] === 'FALSE'){
         state.checklist[id] = (row['Checklist'] === true || row['Checklist'] === 'TRUE');
+      }
+      if(row['Pct'] !== '' && row['Pct'] !== undefined && row['Pct'] !== null && !isNaN(Number(row['Pct']))){
+        item.pct = Number(row['Pct']);
+        state.pct[id] = item.pct;
+      }
+      const isoData = brDateToIso(row['Data confirmada']);
+      if(isoData){
+        item.dataConfirmada = isoData;
+        state.agendaData[id] = isoData;
+      }
+      const horaNorm = normalizeHora(row['Horário confirmado']);
+      if(horaNorm){
+        item.horarioConfirmado = horaNorm;
+        state.agendaHora[id] = horaNorm;
       }
     });
     saveState(state);
@@ -914,8 +952,10 @@ function renderTable(){
         <input type="range" class="pct-slider" min="0" max="100" step="10" value="${a.pct}" data-id="${a.id}">
         <span class="pct-label">${a.pct}%</span>
       </td>
+      <td><input type="date" class="agenda-data" data-id="${a.id}" value="${a.dataConfirmada||''}"></td>
+      <td><input type="time" class="agenda-hora" data-id="${a.id}" value="${a.horarioConfirmado||''}"></td>
     </tr>
-  `).join('') || `<tr><td colspan="10" style="text-align:center; color:var(--muted2); padding:24px;">Nenhuma atividade encontrada.</td></tr>`;
+  `).join('') || `<tr><td colspan="12" style="text-align:center; color:var(--muted2); padding:24px;">Nenhuma atividade encontrada.</td></tr>`;
 }
 [fEmpresa,fGrupo,fStatus,fSearch].forEach(el=>el.addEventListener('input', renderTable));
 
@@ -929,6 +969,22 @@ document.getElementById('tableBody').addEventListener('change', e=>{
     syncPush(id, 'Status', e.target.value);
     renderAll();
   }
+  if(e.target.classList.contains('agenda-data')){
+    const id = Number(e.target.dataset.id);
+    const item = ATIVIDADES.find(a=>a.id===id);
+    item.dataConfirmada = e.target.value;
+    state.agendaData[id] = e.target.value;
+    saveState(state);
+    syncPush(id, 'Data confirmada', e.target.value);
+  }
+  if(e.target.classList.contains('agenda-hora')){
+    const id = Number(e.target.dataset.id);
+    const item = ATIVIDADES.find(a=>a.id===id);
+    item.horarioConfirmado = e.target.value;
+    state.agendaHora[id] = e.target.value;
+    saveState(state);
+    syncPush(id, 'Horário confirmado', e.target.value);
+  }
 });
 document.getElementById('tableBody').addEventListener('input', e=>{
   if(e.target.classList.contains('pct-slider')){
@@ -938,6 +994,7 @@ document.getElementById('tableBody').addEventListener('input', e=>{
     state.pct[id] = item.pct;
     e.target.nextElementSibling.textContent = item.pct + '%';
     saveState(state);
+    syncPush(id, 'Pct', item.pct);
     renderKPIs(computeAgg());
   }
 });
