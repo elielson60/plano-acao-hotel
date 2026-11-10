@@ -168,6 +168,9 @@
   .btn-reset{background:#fff; border:1px solid var(--border); color:var(--muted); padding:8px 13px; border-radius:8px; font-size:11.5px; font-weight:600; cursor:pointer;}
   .btn-reset:hover{color:var(--red); border-color:var(--red);}
   .edit-hint{color:var(--muted2); font-size:11px; margin-bottom:10px;}
+  .sync-badge{display:inline-block; margin-top:8px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px;}
+  .sync-badge.ok{background:#e4f6ee; color:var(--green);}
+  .sync-badge.off{background:#eef1f5; color:var(--gray);}
 
   /* ===== MEETINGS ===== */
   .meeting-card{border-left:4px solid var(--navy); padding-left:16px; margin-bottom:18px;}
@@ -317,6 +320,7 @@
       <div class="tag">Matriz de Responsabilidades</div>
       <h2>Quem faz o quê — sugestão para validação</h2>
       <p>Responsáveis <b style="color:var(--navy)">sugeridos</b>, não confirmados. Marcados como "A validar" até a reunião de alinhamento inicial. Clique no status para atualizar durante a viagem.</p>
+      <span id="syncBadge" class="sync-badge" hidden></span>
     </div>
     <div class="card">
       <div class="filters">
@@ -727,6 +731,62 @@ ATIVIDADES.forEach(a=>{
   if(state.pct[a.id] !== undefined) a.pct = state.pct[a.id];
 });
 
+// ===== Shared sync via Google Sheet (Apps Script Web App) =====
+// Status and Checklist are shared across the whole team through this endpoint.
+// localStorage above still works as an instant local fallback/cache.
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbykE1dQjfLTsHh0KVJC5JK6mScxtoUupC5ShUOfhmgj4UcfL1pHS0rAHgawQSelI2EMWA/exec';
+let syncOk = null; // null = not checked yet, true/false after first attempt
+const syncBadge = () => document.getElementById('syncBadge');
+
+function setSyncStatus(ok){
+  syncOk = ok;
+  const el = syncBadge();
+  if(!el) return;
+  el.hidden = false;
+  el.className = 'sync-badge ' + (ok ? 'ok' : 'off');
+  el.textContent = ok ? '🟢 Sincronizado com a equipe' : '⚪ Offline — salvo só neste aparelho';
+}
+
+function syncPush(id, field, value){
+  if(!SHEET_API_URL) return;
+  try{
+    fetch(SHEET_API_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ id: Number(id), field, value })
+    }).then(()=> setSyncStatus(true)).catch(()=> setSyncStatus(false));
+  }catch(e){ setSyncStatus(false); }
+}
+
+async function syncPull(silent){
+  if(!SHEET_API_URL) return;
+  try{
+    const res = await fetch(SHEET_API_URL, { method: 'GET' });
+    const json = await res.json();
+    if(!json || !json.ok || !Array.isArray(json.data)) throw new Error('resposta inválida');
+    json.data.forEach(row=>{
+      const id = row['#'];
+      if(id === '' || id === undefined || id === null) return;
+      const item = ATIVIDADES.find(a=>a.id===Number(id));
+      if(!item) return;
+      if(row['Status']){
+        item.status = row['Status'];
+        state.status[id] = row['Status'];
+      }
+      if(row['Checklist'] === true || row['Checklist'] === 'TRUE' || row['Checklist'] === false || row['Checklist'] === 'FALSE'){
+        state.checklist[id] = (row['Checklist'] === true || row['Checklist'] === 'TRUE');
+      }
+    });
+    saveState(state);
+    setSyncStatus(true);
+    renderAll();
+  }catch(e){
+    setSyncStatus(false);
+    if(!silent) console.warn('Falha ao sincronizar com a planilha:', e);
+  }
+}
+
 let empresaChartInst=null, grupoChartInst=null, prioridadeChartInst=null;
 Chart.defaults.font.family = "'Inter', sans-serif";
 
@@ -866,6 +926,7 @@ document.getElementById('tableBody').addEventListener('change', e=>{
     item.status = e.target.value;
     state.status[id] = e.target.value;
     saveState(state);
+    syncPush(id, 'Status', e.target.value);
     renderAll();
   }
 });
@@ -910,6 +971,7 @@ document.getElementById('checklistContainer').addEventListener('change', e=>{
     const id = e.target.dataset.id;
     state.checklist[id] = e.target.checked;
     saveState(state);
+    syncPush(id, 'Checklist', e.target.checked);
     e.target.closest('.check-item').classList.toggle('done', e.target.checked);
   }
 });
@@ -951,6 +1013,12 @@ function renderAll(){
   renderInsights(agg);
 }
 renderAll();
+
+// Pull the latest status/checklist from the shared sheet, then keep polling
+// lightly so everyone sees each other's updates without reloading the page.
+syncPull(true);
+setInterval(()=>{ if(!document.hidden) syncPull(true); }, 20000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) syncPull(true); });
 
 // ===== Active nav pill on scroll =====
 (function(){
