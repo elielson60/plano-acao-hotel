@@ -828,6 +828,10 @@ async function syncPull(silent){
 let empresaChartInst=null, grupoChartInst=null, prioridadeChartInst=null;
 Chart.defaults.font.family = "'Inter', sans-serif";
 
+// Progresso efetivo: "Concluído" sempre conta como 100%, mesmo que o slider
+// de % não tenha sido movido manualmente (ex.: quem só usou o Status).
+function pctEfetivo(a){ return a.status==='Concluído' ? 100 : Number(a.pct||0); }
+
 function computeAgg(){
   const total = ATIVIDADES.length;
   const concluido = ATIVIDADES.filter(a=>a.status==='Concluído').length;
@@ -835,7 +839,7 @@ function computeAgg(){
   const pendente = ATIVIDADES.filter(a=>a.status==='Pendente').length;
   const bloqueado = ATIVIDADES.filter(a=>a.status==='Bloqueado').length;
   const naoIniciado = ATIVIDADES.filter(a=>a.status==='Não iniciado').length;
-  const pctGeral = Math.round(ATIVIDADES.reduce((s,a)=>s+Number(a.pct||0),0) / total);
+  const pctGeral = Math.round(ATIVIDADES.reduce((s,a)=>s+pctEfetivo(a),0) / total);
   return {total, concluido, andamento, pendente, bloqueado, naoIniciado, pctGeral};
 }
 
@@ -949,8 +953,8 @@ function renderTable(){
         </select>
       </td>
       <td>
-        <input type="range" class="pct-slider" min="0" max="100" step="10" value="${a.pct}" data-id="${a.id}">
-        <span class="pct-label">${a.pct}%</span>
+        <input type="range" class="pct-slider" min="0" max="100" step="10" value="${pctEfetivo(a)}" data-id="${a.id}">
+        <span class="pct-label">${pctEfetivo(a)}%</span>
       </td>
       <td><input type="date" class="agenda-data" data-id="${a.id}" value="${a.dataConfirmada||''}"></td>
       <td><input type="time" class="agenda-hora" data-id="${a.id}" value="${a.horarioConfirmado||''}"></td>
@@ -965,6 +969,11 @@ document.getElementById('tableBody').addEventListener('change', e=>{
     const item = ATIVIDADES.find(a=>a.id===id);
     item.status = e.target.value;
     state.status[id] = e.target.value;
+    if(e.target.value === 'Concluído' && Number(item.pct||0) < 100){
+      item.pct = 100;
+      state.pct[id] = 100;
+      syncPush(id, 'Pct', 100);
+    }
     saveState(state);
     syncPush(id, 'Status', e.target.value);
     renderAll();
