@@ -92,6 +92,23 @@
   .kpi-value{font-family:var(--sora); font-size:26px; font-weight:800; margin-top:6px; color:var(--navy);}
   .kpi-sub{color:var(--muted2); font-size:10.5px; margin-top:2px;}
 
+  .kpi.clickable{cursor:pointer; transition:transform .12s ease, box-shadow .12s ease; user-select:none; -webkit-tap-highlight-color:transparent;}
+  .kpi.clickable:hover{transform:translateY(-2px); box-shadow:0 6px 16px rgba(11,36,71,.10);}
+  .kpi.clickable:focus-visible{outline:2px solid var(--blue); outline-offset:2px;}
+  .kpi.active{background:var(--blue-pale); box-shadow:inset 0 0 0 1.5px var(--blue);}
+  .kpi-go{color:var(--blue); font-size:10px; font-weight:700; margin-top:6px;}
+  .crono-resumo{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
+  .crono-resumo .chip{font-size:11.5px; font-weight:700; padding:5px 12px; border-radius:20px; background:var(--blue-pale); color:var(--navy);}
+  .crono-resumo .chip.ok{background:#e4f6ee; color:var(--green);}
+  .crono-resumo .chip.warn{background:#fdf0e3; color:#9c5a12;}
+  .crono-nota{font-size:11.5px; color:var(--muted); margin-bottom:14px;}
+  .day-head .dcount{margin-left:auto; font-size:10.5px; font-weight:700; color:var(--muted);}
+  .activity-row.done{opacity:.6;}
+  .activity-row.done .title{text-decoration:line-through; text-decoration-color:var(--green);}
+  .chip-ok, .chip-resched{font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px;}
+  .chip-ok{background:#e4f6ee; color:var(--green);}
+  .chip-resched{background:#fdf0e3; color:#9c5a12;}
+
   .grid-2{display:grid; grid-template-columns:1.1fr 1fr; gap:18px;}
   .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
   .chart-box{position:relative; height:230px;}
@@ -302,7 +319,7 @@
     <div class="section-head">
       <div class="tag">Painel Executivo</div>
       <h2>Indicadores gerais do plano</h2>
-      <p>Visão consolidada das 20 atividades técnicas distribuídas ao longo da viagem.</p>
+      <p id="kpiIntro">Visão consolidada das atividades técnicas distribuídas ao longo da viagem.</p>
     </div>
     <div class="kpis" id="kpi-strip" style="margin-bottom:18px;"></div>
     <div class="grid-3">
@@ -318,7 +335,7 @@
       <h2>Cronograma diário — 10 a 20/11/2026</h2>
       <p>Atividades distribuídas por dia, considerando dependências técnicas (ex: cabeamento antes de instalar roteadores). Horário de início/término: <b style="color:var(--navy)">a definir com cada responsável</b>.</p>
     </div>
-    <div class="card"><div id="timelineList"></div></div>
+    <div class="card"><div id="cronoResumo"></div><div id="timelineList"></div></div>
   </div>
 
   <div class="section" id="responsabilidades">
@@ -400,7 +417,7 @@
 </div>
 
 <script>
-const ATIVIDADES = [{"id": 1, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Atualização do servidor do sistema Colibri", "prioridade": "Crítica", "dia": "2026-11-11", "dependencias": "Nenhuma — ação inicial do grupo de infraestrutura", "resultado": "Servidor Colibri atualizado e estável, sem indisponibilidade para operação", "responsavel": "Elielson Nascimento (TI)", "apoio": "Orlando (Restaurante Do Mar)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 2, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Revisão dos equipamentos de rede Wi-Fi administrativo", "prioridade": "Alta", "dia": "2026-11-11", "dependencias": "Nenhuma", "resultado": "Rede administrativa revisada e validada", "responsavel": "Elielson Nascimento (TI) + Cleiton Santos (Infra)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 3, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Revisão da rede Wi-Fi destinada aos hóspedes", "prioridade": "Alta", "dia": "2026-11-12", "dependencias": "Revisão da rede administrativa (#2) concluída", "resultado": "Rede de hóspedes com cobertura e estabilidade validadas", "responsavel": "Elielson Nascimento (TI) + Cleiton Santos (Infra)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 4, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Passagem de cabo principal para atendimento dos novos pontos de rede", "prioridade": "Alta", "dia": "2026-11-12", "dependencias": "Revisão da rede de hóspedes (#3)", "resultado": "Cabeamento principal pronto para os novos pontos de rede", "responsavel": "Elielson Nascimento (TI)", "apoio": "Elton (Manutenção Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 5, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Instalação e configuração de roteadores no térreo", "prioridade": "Alta", "dia": "2026-11-13", "dependencias": "Passagem de cabo principal (#4)", "resultado": "Roteador do térreo instalado e configurado", "responsavel": "Elielson Nascimento (TI)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 6, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Manutenção do quadro de rede lógica do Bar Molhado", "prioridade": "Média", "dia": "2026-11-13", "dependencias": "Nenhuma", "resultado": "Quadro de rede lógica do Bar Molhado organizado e operacional", "responsavel": "Elielson Nascimento (TI)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 7, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Revisão da conectividade Wi-Fi de todas as TVs dos apartamentos", "prioridade": "Média", "dia": "2026-11-14", "dependencias": "Nenhuma", "resultado": "Conectividade das TVs dos apartamentos validada", "responsavel": "Elielson Nascimento (TI) + Cleiton Santos (Infra)", "apoio": "Laura (Governança)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 8, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Instalação de roteador exclusivo para as maquininhas de cartão de crédito", "prioridade": "Crítica", "dia": "2026-11-14", "dependencias": "Nenhuma", "resultado": "Rede dedicada e isolada para maquininhas de cartão em operação", "responsavel": "Elielson Nascimento (TI)", "apoio": "Leyda (Recepção) + Marcia (Financeiro)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 9, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Instalação e configuração de roteadores no segundo andar", "prioridade": "Alta", "dia": "2026-11-16", "dependencias": "Instalação do térreo (#5)", "resultado": "Roteador do segundo andar instalado e configurado", "responsavel": "Elielson Nascimento (TI)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 10, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Instalação e configuração de roteadores no terceiro andar", "prioridade": "Alta", "dia": "2026-11-17", "dependencias": "Instalação do segundo andar (#9)", "resultado": "Roteador do terceiro andar instalado e configurado", "responsavel": "Elielson Nascimento (TI)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 11, "grupo": "Sistemas e Automação", "empresa": "Hotel", "desc": "Ajustes e melhorias no sistema de bilheteria", "prioridade": "Alta", "dia": "2026-11-18", "dependencias": "Nenhuma", "resultado": "Sistema de bilheteria ajustado conforme pontos levantados", "responsavel": "Elielson Nascimento (TI)", "apoio": "Marcia (Financeiro) + Nadia (Gerente Hotel) + Marilia (Comercial)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 12, "grupo": "Sistemas e Automação", "empresa": "Hotel", "desc": "Revisão dos processos operacionais do sistema de bilheteria", "prioridade": "Alta", "dia": "2026-11-18", "dependencias": "Ajustes no sistema de bilheteria (#11)", "resultado": "Processos operacionais da bilheteria documentados e validados", "responsavel": "Elielson Nascimento (TI)", "apoio": "Marcia (Financeiro) + Nadia (Gerente Hotel) + Marilia (Comercial)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 13, "grupo": "Sistemas e Automação", "empresa": "Hotel", "desc": "Treinamento dos colaboradores para utilização do sistema de bilheteria", "prioridade": "Alta", "dia": "2026-11-19", "dependencias": "Revisão dos processos (#12)", "resultado": "Equipe da bilheteria treinada e apta a operar o sistema", "responsavel": "Elielson Nascimento (TI)", "apoio": "Marcia (Financeiro) + Nadia (Gerente Hotel) + Marilia (Comercial)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 14, "grupo": "Sistemas e Automação", "empresa": "Hotel", "desc": "Validação dos fluxos de vendas, pagamentos, ingressos e relatórios", "prioridade": "Crítica", "dia": "2026-11-19", "dependencias": "Treinamento da equipe (#13)", "resultado": "Fluxos de venda, pagamento e relatórios validados ponta a ponta", "responsavel": "Elielson Nascimento (TI)", "apoio": "Marcia (Financeiro) + Nadia (Gerente Hotel) + Marilia (Comercial)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 15, "grupo": "Restaurante e Operações", "empresa": "Restaurante Do Mar", "desc": "Suporte ao inventário de estoque do restaurante", "prioridade": "Média", "dia": "2026-11-15", "dependencias": "Nenhuma", "resultado": "Suporte técnico prestado ao inventário de estoque", "responsavel": "Elielson Nascimento (TI)", "apoio": "Orlando (Restaurante Do Mar)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 16, "grupo": "Restaurante e Operações", "empresa": "Restaurante Do Mar", "desc": "Conferência dos processos de movimentação e controle de estoque", "prioridade": "Média", "dia": "2026-11-16", "dependencias": "Suporte ao inventário (#15)", "resultado": "Processos de movimentação e controle de estoque conferidos", "responsavel": "Elielson Nascimento (TI)", "apoio": "Orlando (Restaurante Do Mar)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 17, "grupo": "Restaurante e Operações", "empresa": "Restaurante Do Mar", "desc": "Validação da integração e funcionamento do sistema Colibri", "prioridade": "Crítica", "dia": "2026-11-11", "dependencias": "Atualização do servidor Colibri (#1)", "resultado": "Integração do Colibri validada após atualização do servidor", "responsavel": "Elielson Nascimento (TI)", "apoio": "Orlando (Restaurante Do Mar)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 22, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Revisão e manutenção dos computadores da recepção", "prioridade": "Alta", "dia": "2026-11-14", "dependencias": "Nenhuma", "resultado": "Computadores da recepção revisados, com manutenção preventiva/corretiva realizada e prontos para a operação", "responsavel": "Elielson Nascimento (TI)", "apoio": "Leyda (Recepção)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 23, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Instalação de novo ponto de Wi-Fi e revisão geral do link de internet", "prioridade": "Alta", "dia": "2026-11-15", "dependencias": "Nenhuma", "resultado": "Novo ponto de Wi-Fi instalado e link de internet revisado e validado", "responsavel": "Elielson Nascimento (TI) + Cleiton Santos (Infra)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 24, "grupo": "Sistemas e Automação", "empresa": "Hotel", "desc": "Instalação e configuração da fechadura SAGA", "prioridade": "Média", "dia": "2026-11-20", "dependencias": "Prazo: finalizar até 20/11", "resultado": "Fechadura SAGA instalada, configurada e validada", "responsavel": "Elielson Nascimento (TI) + Elton (Manutenção Hotel)", "apoio": "A validar", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}];
+const ATIVIDADES = [{"id": 1, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Atualização do servidor do sistema Colibri", "prioridade": "Crítica", "dia": "2026-11-11", "dependencias": "Nenhuma — ação inicial do grupo de infraestrutura", "resultado": "Servidor Colibri atualizado e estável, sem indisponibilidade para operação", "responsavel": "Elielson Nascimento (TI)", "apoio": "Orlando (Restaurante Do Mar)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 2, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Revisão dos equipamentos de rede Wi-Fi administrativo", "prioridade": "Alta", "dia": "2026-11-11", "dependencias": "Nenhuma", "resultado": "Rede administrativa revisada e validada", "responsavel": "Elielson Nascimento (TI) + Cleiton Santos (Infra)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 3, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Revisão da rede Wi-Fi destinada aos hóspedes", "prioridade": "Alta", "dia": "2026-11-18", "dependencias": "Revisão da rede administrativa (#2) concluída", "resultado": "Rede de hóspedes com cobertura e estabilidade validadas", "responsavel": "Elielson Nascimento (TI) + Cleiton Santos (Infra)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": "", "diaOriginal": "2026-11-12"}, {"id": 4, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Passagem de cabo principal para atendimento dos novos pontos de rede", "prioridade": "Alta", "dia": "2026-11-18", "dependencias": "Revisão da rede de hóspedes (#3)", "resultado": "Cabeamento principal pronto para os novos pontos de rede", "responsavel": "Elielson Nascimento (TI)", "apoio": "Elton (Manutenção Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": "", "diaOriginal": "2026-11-12"}, {"id": 5, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Instalação e configuração de roteadores no térreo", "prioridade": "Alta", "dia": "2026-11-19", "dependencias": "Passagem de cabo principal (#4)", "resultado": "Roteador do térreo instalado e configurado", "responsavel": "Elielson Nascimento (TI)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": "", "diaOriginal": "2026-11-13"}, {"id": 6, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Manutenção do quadro de rede lógica do Bar Molhado", "prioridade": "Média", "dia": "2026-11-13", "dependencias": "Nenhuma", "resultado": "Quadro de rede lógica do Bar Molhado organizado e operacional", "responsavel": "Elielson Nascimento (TI)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 7, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Revisão da conectividade Wi-Fi de todas as TVs dos apartamentos", "prioridade": "Média", "dia": "2026-11-20", "dependencias": "Nenhuma", "resultado": "Conectividade das TVs dos apartamentos validada", "responsavel": "Elielson Nascimento (TI) + Cleiton Santos (Infra)", "apoio": "Laura (Governança)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": "", "diaOriginal": "2026-11-14"}, {"id": 8, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Instalação de roteador exclusivo para as maquininhas de cartão de crédito", "prioridade": "Crítica", "dia": "2026-11-14", "dependencias": "Nenhuma", "resultado": "Rede dedicada e isolada para maquininhas de cartão em operação", "responsavel": "Elielson Nascimento (TI)", "apoio": "Leyda (Recepção) + Marcia (Financeiro)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 9, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Instalação e configuração de roteadores no segundo andar", "prioridade": "Alta", "dia": "2026-11-19", "dependencias": "Instalação do térreo (#5)", "resultado": "Roteador do segundo andar instalado e configurado", "responsavel": "Elielson Nascimento (TI)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": "", "diaOriginal": "2026-11-16"}, {"id": 10, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Instalação e configuração de roteadores no terceiro andar", "prioridade": "Alta", "dia": "2026-11-20", "dependencias": "Instalação do segundo andar (#9)", "resultado": "Roteador do terceiro andar instalado e configurado", "responsavel": "Elielson Nascimento (TI)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": "", "diaOriginal": "2026-11-17"}, {"id": 11, "grupo": "Sistemas e Automação", "empresa": "Hotel", "desc": "Ajustes e melhorias no sistema de bilheteria", "prioridade": "Alta", "dia": "2026-11-18", "dependencias": "Nenhuma", "resultado": "Sistema de bilheteria ajustado conforme pontos levantados", "responsavel": "Elielson Nascimento (TI)", "apoio": "Marcia (Financeiro) + Nadia (Gerente Hotel) + Marilia (Comercial)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 12, "grupo": "Sistemas e Automação", "empresa": "Hotel", "desc": "Revisão dos processos operacionais do sistema de bilheteria", "prioridade": "Alta", "dia": "2026-11-18", "dependencias": "Ajustes no sistema de bilheteria (#11)", "resultado": "Processos operacionais da bilheteria documentados e validados", "responsavel": "Elielson Nascimento (TI)", "apoio": "Marcia (Financeiro) + Nadia (Gerente Hotel) + Marilia (Comercial)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 13, "grupo": "Sistemas e Automação", "empresa": "Hotel", "desc": "Treinamento dos colaboradores para utilização do sistema de bilheteria", "prioridade": "Alta", "dia": "2026-11-19", "dependencias": "Revisão dos processos (#12)", "resultado": "Equipe da bilheteria treinada e apta a operar o sistema", "responsavel": "Elielson Nascimento (TI)", "apoio": "Marcia (Financeiro) + Nadia (Gerente Hotel) + Marilia (Comercial)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 14, "grupo": "Sistemas e Automação", "empresa": "Hotel", "desc": "Validação dos fluxos de vendas, pagamentos, ingressos e relatórios", "prioridade": "Crítica", "dia": "2026-11-19", "dependencias": "Treinamento da equipe (#13)", "resultado": "Fluxos de venda, pagamento e relatórios validados ponta a ponta", "responsavel": "Elielson Nascimento (TI)", "apoio": "Marcia (Financeiro) + Nadia (Gerente Hotel) + Marilia (Comercial)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 15, "grupo": "Restaurante e Operações", "empresa": "Restaurante Do Mar", "desc": "Suporte ao inventário de estoque do restaurante", "prioridade": "Média", "dia": "2026-11-18", "dependencias": "Nenhuma", "resultado": "Suporte técnico prestado ao inventário de estoque", "responsavel": "Elielson Nascimento (TI)", "apoio": "Orlando (Restaurante Do Mar)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": "", "diaOriginal": "2026-11-15"}, {"id": 16, "grupo": "Restaurante e Operações", "empresa": "Restaurante Do Mar", "desc": "Conferência dos processos de movimentação e controle de estoque", "prioridade": "Média", "dia": "2026-11-19", "dependencias": "Suporte ao inventário (#15)", "resultado": "Processos de movimentação e controle de estoque conferidos", "responsavel": "Elielson Nascimento (TI)", "apoio": "Orlando (Restaurante Do Mar)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": "", "diaOriginal": "2026-11-16"}, {"id": 17, "grupo": "Restaurante e Operações", "empresa": "Restaurante Do Mar", "desc": "Validação da integração e funcionamento do sistema Colibri", "prioridade": "Crítica", "dia": "2026-11-18", "dependencias": "Atualização do servidor Colibri (#1)", "resultado": "Integração do Colibri validada após atualização do servidor", "responsavel": "Elielson Nascimento (TI)", "apoio": "Orlando (Restaurante Do Mar)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": "", "diaOriginal": "2026-11-11"}, {"id": 22, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Revisão e manutenção dos computadores da recepção", "prioridade": "Alta", "dia": "2026-11-14", "dependencias": "Nenhuma", "resultado": "Computadores da recepção revisados, com manutenção preventiva/corretiva realizada e prontos para a operação", "responsavel": "Elielson Nascimento (TI)", "apoio": "Leyda (Recepção)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 23, "grupo": "Infraestrutura e Redes", "empresa": "Hotel", "desc": "Instalação de novo ponto de Wi-Fi e revisão geral do link de internet", "prioridade": "Alta", "dia": "2026-11-20", "dependencias": "Nenhuma", "resultado": "Novo ponto de Wi-Fi instalado e link de internet revisado e validado", "responsavel": "Elielson Nascimento (TI) + Cleiton Santos (Infra)", "apoio": "Nadia (Gerente Hotel)", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": "", "diaOriginal": "2026-11-15"}, {"id": 24, "grupo": "Sistemas e Automação", "empresa": "Hotel", "desc": "Instalação e configuração da fechadura SAGA", "prioridade": "Média", "dia": "2026-11-20", "dependencias": "Prazo: finalizar até 20/11", "resultado": "Fechadura SAGA instalada, configurada e validada", "responsavel": "Elielson Nascimento (TI) + Elton (Manutenção Hotel)", "apoio": "A validar", "horario": "A definir", "status": "Não iniciado", "pct": 0, "evidencia": ""}, {"id": 25, "grupo": "Monitoramento", "empresa": "Hotel", "desc": "Apresentar proposta para Diretoria", "prioridade": "Média", "dia": "2026-11-19", "dependencias": "Nenhuma", "resultado": "Proposta apresentada à Diretoria", "responsavel": "Elielson Nascimento (TI)", "apoio": "Nadia (Gerente Hotel) + Elton (Manutenção Hotel)", "horario": "A definir", "status": "Em andamento", "pct": 0, "evidencia": ""}];
 const RISCOS = [{"risco": "Indisponibilidade do servidor Colibri durante a atualização", "impacto": "Alto — pode interromper vendas, check-in e operação do restaurante", "probabilidade": "Média", "criticidade": "Crítico", "contingencia": "Executar a atualização em horário de menor movimento, com backup completo prévio e plano de rollback testado antes da janela de manutenção"}, {"risco": "Falhas de conectividade durante a instalação de roteadores/cabeamento", "impacto": "Médio — pode afetar Wi-Fi de hóspedes e sistemas administrativos temporariamente", "probabilidade": "Média", "criticidade": "Alto", "contingencia": "Programar instalações por andar em janelas segmentadas, mantendo ao menos um ponto de rede ativo por área crítica durante a troca"}, {"risco": "Interrupção das operações do restaurante por falha no sistema de estoque/Colibri", "impacto": "Alto — pode impactar vendas e controle fiscal do Restaurante Do Mar", "probabilidade": "Baixa", "criticidade": "Alto", "contingencia": "Validar integração Colibri logo após a atualização do servidor (#17) antes de liberar o uso normal; manter contingência manual de lançamento"}, {"risco": "Falhas nas maquininhas de cartão de crédito", "impacto": "Alto — impacto direto em recebimentos", "probabilidade": "Baixa", "criticidade": "Crítico", "contingencia": "Isolar a rede das maquininhas em roteador dedicado (#8) e testar transações antes de liberar para uso em produção"}, {"risco": "Problemas no sistema de bilheteria após ajustes", "impacto": "Médio — pode afetar vendas de ingressos e geração de relatórios", "probabilidade": "Média", "criticidade": "Alto", "contingencia": "Validar fluxos completos (venda, pagamento, ingresso, relatório) em ambiente controlado antes do treinamento da equipe"}, {"risco": "Atrasos na execução das atividades de infraestrutura", "impacto": "Médio — pode comprometer o cronograma das demais frentes (sistemas, segurança)", "probabilidade": "Média", "criticidade": "Médio", "contingencia": "Priorizar atividades críticas e de dependência (servidor Colibri, cabeamento) nos primeiros dias, com folga no cronograma para reorganização"}];
 
 const STATUS_OPTIONS = ['Não iniciado','Em andamento','Pendente','Concluído','Bloqueado'];
@@ -540,21 +557,51 @@ function computeAgg(){
 }
 
 function renderKPIs(agg){
+  const intro=document.getElementById('kpiIntro');
+  if(intro) intro.textContent='Visão consolidada das '+agg.total+' atividades técnicas distribuídas ao longo da viagem.';
+  const atual=(document.getElementById('fStatus')||{}).value||'';
   const kpis = [
-    {cls:'', label:'Total de Atividades', value:agg.total, sub:'planejadas para a viagem'},
-    {cls:'green', label:'Concluídas', value:agg.concluido, sub:Math.round(agg.concluido/agg.total*100)+'% do total'},
-    {cls:'', label:'Em Andamento', value:agg.andamento, sub:'em execução'},
-    {cls:'amber', label:'Pendentes', value:agg.pendente, sub:'aguardando ação'},
-    {cls:'red', label:'Bloqueadas', value:agg.bloqueado, sub:'precisam de intervenção'},
-    {cls:'gray', label:'% Execução Geral', value:agg.pctGeral+'%', sub:'média de conclusão'},
+    {cls:'', label:'Total de Atividades', value:agg.total, sub:'planejadas para a viagem', status:'', all:true},
+    {cls:'green', label:'Concluídas', value:agg.concluido, sub:Math.round(agg.concluido/agg.total*100)+'% do total', status:'Concluído'},
+    {cls:'', label:'Em Andamento', value:agg.andamento, sub:'em execução', status:'Em andamento'},
+    {cls:'amber', label:'Pendentes', value:agg.pendente, sub:'aguardando ação', status:'Pendente'},
+    {cls:'red', label:'Bloqueadas', value:agg.bloqueado, sub:'precisam de intervenção', status:'Bloqueado'},
+    {cls:'gray', label:'% Execução Geral', value:agg.pctGeral+'%', sub:'média de conclusão', status:null},
   ];
-  document.getElementById('kpi-strip').innerHTML = kpis.map(k=>`
-    <div class="kpi ${k.cls}">
+  document.getElementById('kpi-strip').innerHTML = kpis.map((k,i)=>{
+    const ativo = k.status && atual===k.status;
+    const dica = k.all ? 'Ver todas as atividades' : (k.status ? (ativo?'Limpar filtro':'Ver atividades: '+k.label) : 'Ver detalhamento por atividade');
+    return `
+    <div class="kpi clickable ${k.cls} ${ativo?'active':''}" role="button" tabindex="0" data-kpi="${i}" title="${dica}" aria-label="${k.label}: ${k.value}. ${dica}">
       <div class="kpi-label">${k.label}</div>
       <div class="kpi-value">${k.value}</div>
       <div class="kpi-sub">${k.sub}</div>
-    </div>`).join('');
+      <div class="kpi-go">${ativo?'✕ limpar filtro':'ver atividades ›'}</div>
+    </div>`;}).join('');
+  window.__kpiDefs = kpis;
 }
+function kpiAcao(i){
+  const k=(window.__kpiDefs||[])[i]; if(!k) return;
+  const fs=document.getElementById('fStatus');
+  if(k.status!==null){
+    const novo = (k.all || fs.value===k.status) ? '' : k.status;
+    document.getElementById('fEmpresa').value=''; document.getElementById('fGrupo').value=''; document.getElementById('fSearch').value='';
+    fs.value=novo;
+    fs.dispatchEvent(new Event('input',{bubbles:true}));
+    renderKPIs(computeAgg());
+  }
+  const alvo=document.getElementById('responsabilidades');
+  if(alvo){
+    const nav=document.querySelector('.topnav');
+    const off=(nav?nav.offsetHeight:0)+8;
+    window.scrollTo({top:alvo.getBoundingClientRect().top+window.scrollY-off, behavior:'smooth'});
+  }
+}
+(function(){
+  const box=document.getElementById('kpi-strip');
+  box.addEventListener('click',e=>{ const c=e.target.closest('.kpi'); if(c) kpiAcao(Number(c.dataset.kpi)); });
+  box.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ const c=e.target.closest('.kpi'); if(c){ e.preventDefault(); kpiAcao(Number(c.dataset.kpi)); } } });
+})();
 
 function renderCharts(){
   [empresaChartInst, grupoChartInst, prioridadeChartInst].forEach(c=>{ if(c) c.destroy(); });
@@ -593,18 +640,32 @@ function renderTimeline(){
   const byDay = {};
   ATIVIDADES.forEach(a=>{ (byDay[a.dia] = byDay[a.dia]||[]).push(a); });
   const days = Object.keys(byDay).sort((x,y)=> (x===''?1:0)-(y===''?1:0) || x.localeCompare(y));
+  const feitas = ATIVIDADES.filter(a=>a.status==='Concluído').length;
+  const faltam = ATIVIDADES.length - feitas;
+  const repro = ATIVIDADES.filter(a=>a.diaOriginal && a.status!=='Concluído').length;
+  document.getElementById('cronoResumo').innerHTML =
+    `<div class="crono-resumo">
+       <span class="chip ok">✓ Executadas: ${feitas}</span>
+       <span class="chip warn">⏳ A finalizar: ${faltam}</span>
+       ${repro?`<span class="chip">↻ Reprogramadas: ${repro}</span>`:''}
+     </div>
+     <div class="crono-nota">Reprogramado em 17/11: o que já foi executado permanece na data original; o restante foi redistribuído de 18 a 20/11, mantendo a ordem das dependências técnicas (ex.: cabeamento #4 antes dos roteadores #5, #9 e #10). Horários a definir com cada responsável.</div>`;
   document.getElementById('timelineList').innerHTML = days.map(dia=>{
     const items = byDay[dia];
     const isHoliday = dia === '2026-11-15';
+    const feitasDia = items.filter(a=>a.status==='Concluído').length;
     return `
       <div class="day-block">
         <div class="day-head">
           <div class="dn">${fmtDiaCurto(dia)}</div>
           <div class="dw">${weekdayPt(dia)}</div>
           ${isHoliday ? '<div class="holiday">Feriado — Proclamação da República</div>' : ''}
+          <div class="dcount">${feitasDia}/${items.length} concluída${items.length>1?'s':''}</div>
         </div>
-        ${items.map(a=>`
-          <div class="activity-row ${prioClass(a.prioridade)}">
+        ${items.map(a=>{
+          const feita = a.status==='Concluído';
+          return `
+          <div class="activity-row ${prioClass(a.prioridade)} ${feita?'done':''}">
             <div class="bar"></div>
             <div class="content">
               <div class="title">${a.desc}</div>
@@ -614,10 +675,11 @@ function renderTimeline(){
                 <span class="badge ${badgeClass(a.prioridade)}">${a.prioridade}</span>
                 <span>Horário: ${a.horario}</span>
                 <span>Status: ${a.status}</span>
+                ${feita?'<span class="chip-ok">✓ Executada</span>':''}
+                ${(!feita && a.diaOriginal)?`<span class="chip-resched">↻ reprogramada (era ${fmtDiaCurto(a.diaOriginal)})</span>`:''}
               </div>
             </div>
-          </div>
-        `).join('')}
+          </div>`;}).join('')}
       </div>
     `;
   }).join('');
@@ -657,7 +719,7 @@ function renderTable(){
     </tr>
   `).join('') || `<tr><td colspan="12" style="text-align:center; color:var(--muted2); padding:24px;">Nenhuma atividade encontrada.</td></tr>`;
 }
-[fEmpresa,fGrupo,fStatus,fSearch].forEach(el=>el.addEventListener('input', renderTable));
+[fEmpresa,fGrupo,fStatus,fSearch].forEach(el=>el.addEventListener('input', ()=>{ renderTable(); renderKPIs(computeAgg()); }));
 
 document.getElementById('tableBody').addEventListener('change', e=>{
   if(e.target.classList.contains('status-select')){
@@ -752,7 +814,7 @@ document.getElementById('riskMatrix').innerHTML = RISCOS.map(r=>`
 // ===== Insights =====
 function renderInsights(agg){
   const insights = [
-    `<b>20 atividades técnicas</b> distribuídas no período — concentração maior na primeira semana (infraestrutura), fechando com sistemas e bilheteria na segunda semana, quando a equipe já tem a rede estabilizada.`,
+    `<b>${agg.total} atividades técnicas</b> no plano — <b>${agg.concluido} executadas</b> e <b>${agg.total-agg.concluido} a finalizar</b> até 20/11, já reprogramadas no cronograma respeitando as dependências (cabeamento antes dos roteadores, inventário antes da conferência de estoque).`,
     `<b>Disponibilidade de infraestrutura:</b> priorize a atualização do servidor Colibri (#1) e a validação da integração (#17) nos primeiros dois dias — são a base técnica de que depende a operação do restaurante e do hotel.`,
     `<b>Conectividade dos hóspedes:</b> a sequência Wi-Fi administrativo → Wi-Fi hóspedes → cabeamento → roteadores por andar reduz o risco de deixar áreas sem cobertura simultaneamente.`,
     `<b>Maquininhas de cartão:</b> isolar essa rede em roteador dedicado (#8) antes de liberar para uso evita que uma instabilidade de Wi-Fi geral afete recebimentos — vale testar transações reais antes de liberar.`,
