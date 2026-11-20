@@ -113,6 +113,36 @@
   .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
   .chart-box{position:relative; height:230px;}
 
+  /* ===== DASHBOARD ===== */
+  .dash-grid{display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:18px;}
+  .dash-ring{grid-column:span 4;} .dash-grupo{grid-column:span 8;}
+  .dash-dia{grid-column:span 6;} .dash-pessoa{grid-column:span 6;}
+  .dash-prio{grid-column:span 4;} .dash-abertas{grid-column:span 8;}
+  .chart-box.tall{height:300px;}
+  .ring-wrap{position:relative; height:190px; margin:6px 0 10px;}
+  .ring-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;}
+  .ring-center b{font-family:var(--sora); font-size:34px; font-weight:800; color:var(--navy); line-height:1;}
+  .ring-center span{font-size:11px; color:var(--muted); font-weight:600; margin-top:4px;}
+  .ring-legend{display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; margin-bottom:14px;}
+  .ring-legend .li{display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--text);}
+  .ring-legend .dot{width:10px; height:10px; border-radius:3px; flex-shrink:0;}
+  .ring-legend b{margin-left:auto; font-family:var(--sora); font-size:12.5px; color:var(--navy);}
+  .emp-bars{border-top:1px solid var(--border); padding-top:12px; display:flex; flex-direction:column; gap:10px;}
+  .emp-row .top{display:flex; justify-content:space-between; font-size:11.5px; font-weight:700; color:var(--navy2); margin-bottom:4px;}
+  .emp-row .track{height:8px; background:#e8eef6; border-radius:8px; overflow:hidden;}
+  .emp-row .fill{height:100%; background:var(--green); border-radius:8px;}
+  .ab-row{display:grid; grid-template-columns:34px minmax(0,1fr) auto; gap:4px 12px; align-items:center; padding:9px 0; border-bottom:1px solid var(--border);}
+  .ab-row:last-child{border-bottom:none;}
+  .ab-id{font-family:var(--sora); font-weight:800; font-size:11.5px; color:var(--muted2);}
+  .ab-title{font-weight:600; color:var(--text); font-size:12.5px; line-height:1.35;}
+  .ab-meta{grid-column:2 / 4; display:flex; flex-wrap:wrap; gap:6px 10px; font-size:11px; color:var(--muted); align-items:center;}
+  .ab-day{font-family:var(--sora); font-weight:700; font-size:11px; color:var(--navy); background:var(--blue-pale); border-radius:7px; padding:2px 8px; white-space:nowrap;}
+  .ab-day.nodate{background:#eef1f5; color:var(--gray);}
+  .ab-scroll{max-height:372px; overflow-y:auto; padding-right:4px;}
+  @media (max-width:980px){
+    .dash-ring,.dash-grupo,.dash-dia,.dash-pessoa,.dash-prio,.dash-abertas{grid-column:span 12;}
+  }
+
   /* ===== ALERT ===== */
   .alert{background:var(--blue-pale); border:1px solid var(--blue-lt); border-left:4px solid var(--blue); border-radius:10px; padding:14px 18px; margin-bottom:22px; display:flex; gap:12px;}
   .alert .ic{font-size:17px;}
@@ -322,10 +352,18 @@
       <p id="kpiIntro">Visão consolidada das atividades técnicas distribuídas ao longo da viagem.</p>
     </div>
     <div class="kpis" id="kpi-strip" style="margin-bottom:18px;"></div>
-    <div class="grid-3">
-      <div class="card"><h3>Atividades por Empresa</h3><div class="sub">Hotel vs. Restaurante Do Mar</div><div class="chart-box"><canvas id="empresaChart"></canvas></div></div>
-      <div class="card"><h3>Atividades por Grupo</h3><div class="sub">Distribuição por frente de trabalho</div><div class="chart-box"><canvas id="grupoChart"></canvas></div></div>
-      <div class="card"><h3>Atividades por Prioridade</h3><div class="sub">Crítica, Alta, Média, Baixa</div><div class="chart-box"><canvas id="prioridadeChart"></canvas></div></div>
+    <div class="dash-grid">
+      <div class="card dash-ring">
+        <h3>Execução geral</h3><div class="sub">Situação de todas as atividades</div>
+        <div class="ring-wrap"><canvas id="ringChart"></canvas><div class="ring-center"><b id="ringPct">0%</b><span>concluído</span></div></div>
+        <div class="ring-legend" id="ringLegend"></div>
+        <div class="emp-bars" id="empBars"></div>
+      </div>
+      <div class="card dash-grupo"><h3>Progresso por frente de trabalho</h3><div class="sub">Concluídas x a finalizar em cada grupo</div><div class="chart-box tall"><canvas id="grupoChart"></canvas></div></div>
+      <div class="card dash-dia"><h3>Atividades por dia</h3><div class="sub">Programadas no cronograma — executadas x a finalizar</div><div class="chart-box"><canvas id="diaChart"></canvas></div></div>
+      <div class="card dash-pessoa"><h3>Carga por pessoa</h3><div class="sub">Atividades em que atua (responsável ou apoio)</div><div class="chart-box"><canvas id="pessoaChart"></canvas></div></div>
+      <div class="card dash-prio"><h3>Por prioridade</h3><div class="sub">Executadas x a finalizar</div><div class="chart-box"><canvas id="prioridadeChart"></canvas></div></div>
+      <div class="card dash-abertas"><h3>Em aberto — o que falta finalizar</h3><div class="sub" id="abertasSub">Ordenado por data e prioridade</div><div id="abertasList"></div></div>
     </div>
   </div>
 
@@ -538,7 +576,7 @@ async function syncPull(silent){
   }
 }
 
-let empresaChartInst=null, grupoChartInst=null, prioridadeChartInst=null;
+let chartInsts=[];
 Chart.defaults.font.family = "'Inter', sans-serif";
 
 // Progresso efetivo: "Concluído" sempre conta como 100%, mesmo que o slider
@@ -603,37 +641,107 @@ function kpiAcao(i){
   box.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ const c=e.target.closest('.kpi'); if(c){ e.preventDefault(); kpiAcao(Number(c.dataset.kpi)); } } });
 })();
 
+const COR_STATUS = {'Concluído':'#1fa97a','Em andamento':'#2e86de','Pendente':'#e0922a','Bloqueado':'#d4453c','Não iniciado':'#c5d0de'};
+const segLabels = {
+  id:'segLabels',
+  afterDatasetsDraw(chart){
+    const ctx=chart.ctx; ctx.save();
+    ctx.font='700 11px Inter, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#fff';
+    chart.data.datasets.forEach((ds,i)=>{
+      const meta=chart.getDatasetMeta(i); if(meta.hidden) return;
+      meta.data.forEach((bar,j)=>{
+        const v=ds.data[j]; if(!v) return;
+        const w=Math.abs(bar.width||0), hh=Math.abs(bar.height||0);
+        if(Math.min(w,hh)<15) return;
+        const c=bar.getCenterPoint(); ctx.fillText(v,c.x,c.y);
+      });
+    });
+    ctx.restore();
+  }
+};
+function nomesDe(txt){
+  return String(txt||'').split('+').map(s=>s.replace(/\(.*?\)/g,'').trim().split(/\s+/)[0]).filter(n=>n && n!=='A' && n!=='—' && !/^validar/i.test(n));
+}
+function nomeDe(txt){ const t=String(txt||''); return /^A validar|^—/.test(t.trim()) ? [] : nomesDe(t); }
+
 function renderCharts(){
-  [empresaChartInst, grupoChartInst, prioridadeChartInst].forEach(c=>{ if(c) c.destroy(); });
+  chartInsts.forEach(c=>{ if(c) c.destroy(); }); chartInsts=[];
+  const agg=computeAgg();
+  const feita=a=>a.status==='Concluído';
+  const baseOpts={responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{color:'#5b7290', font:{size:11}, padding:12, boxWidth:12, boxHeight:12}}}};
+  const stackScales=(horiz)=>({
+    x:{stacked:true, ticks:{color:'#5b7290', font:{size:10.5}, precision:0}, grid:{display:horiz, color:'#eaf1f8'}},
+    y:{stacked:true, ticks:{color:'#13233d', font:{size:10.5, weight:600}, precision:0}, grid:{display:!horiz, color:'#eaf1f8'}}
+  });
+  const dsDoneOpen=(done,open)=>[
+    {label:'Executadas', data:done, backgroundColor:'#1fa97a', borderRadius:4, maxBarThickness:34},
+    {label:'A finalizar', data:open, backgroundColor:'#2e86de', borderRadius:4, maxBarThickness:34},
+  ];
 
-  const empresaCount = {};
-  ATIVIDADES.forEach(a=>{empresaCount[a.empresa]=(empresaCount[a.empresa]||0)+1;});
-  empresaChartInst = new Chart(document.getElementById('empresaChart'), {
+  // --- Anel de execução geral
+  const grp=[['Concluído',agg.concluido],['Em andamento',agg.andamento],['Pendente',agg.pendente],['Bloqueado',agg.bloqueado],['Não iniciado',agg.naoIniciado]];
+  chartInsts.push(new Chart(document.getElementById('ringChart'),{
     type:'doughnut',
-    data:{labels:Object.keys(empresaCount), datasets:[{data:Object.values(empresaCount), backgroundColor:['#2e86de','#e0922a'], borderColor:'#fff', borderWidth:3}]},
-    options:{responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{position:'bottom', labels:{color:'#5b7290', font:{size:11}, padding:12}}}}
-  });
+    data:{labels:grp.map(g=>g[0]), datasets:[{data:grp.map(g=>g[1]), backgroundColor:grp.map(g=>COR_STATUS[g[0]]), borderColor:'#fff', borderWidth:3}]},
+    options:{responsive:true, maintainAspectRatio:false, cutout:'72%', plugins:{legend:{display:false}}}
+  }));
+  document.getElementById('ringPct').textContent=agg.pctGeral+'%';
+  document.getElementById('ringLegend').innerHTML=grp.map(g=>`<div class="li"><span class="dot" style="background:${COR_STATUS[g[0]]}"></span>${g[0]}<b>${g[1]}</b></div>`).join('');
+  const emps=[...new Set(ATIVIDADES.map(a=>a.empresa))];
+  document.getElementById('empBars').innerHTML=emps.map(em=>{
+    const l=ATIVIDADES.filter(a=>a.empresa===em), f=l.filter(feita).length, pc=Math.round(f/l.length*100);
+    return `<div class="emp-row"><div class="top"><span>${em}</span><span>${f}/${l.length} · ${pc}%</span></div><div class="track"><div class="fill" style="width:${pc}%"></div></div></div>`;
+  }).join('');
 
-  const grupoCount = {};
-  ATIVIDADES.forEach(a=>{grupoCount[a.grupo]=(grupoCount[a.grupo]||0)+1;});
-  const grupoLabels = Object.keys(grupoCount);
-  grupoChartInst = new Chart(document.getElementById('grupoChart'), {
-    type:'bar',
-    data:{labels:grupoLabels.map(g=>g.length>16?g.slice(0,16)+'…':g), datasets:[{data:grupoLabels.map(g=>grupoCount[g]), backgroundColor:'#13315c', borderRadius:6, maxBarThickness:34}]},
-    options:{responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}},
-      scales:{x:{ticks:{color:'#5b7290', stepSize:2}, grid:{color:'#eaf1f8'}}, y:{ticks:{color:'#13233d', font:{size:10.5, weight:600}}, grid:{display:false}}}}
-  });
+  // --- Progresso por frente de trabalho (empilhado)
+  const grupos=[...new Set(ATIVIDADES.map(a=>a.grupo))];
+  chartInsts.push(new Chart(document.getElementById('grupoChart'),{
+    type:'bar', plugins:[segLabels],
+    data:{labels:grupos, datasets:dsDoneOpen(grupos.map(g=>ATIVIDADES.filter(a=>a.grupo===g&&feita(a)).length), grupos.map(g=>ATIVIDADES.filter(a=>a.grupo===g&&!feita(a)).length))},
+    options:{...baseOpts, indexAxis:'y', scales:stackScales(true)}
+  }));
 
-  const prioOrder = ['Crítica','Alta','Média','Baixa'];
-  const prioColors = {'Crítica':'#d4453c','Alta':'#e0922a','Média':'#2e86de','Baixa':'#8a94a6'};
-  const prioCount = {}; prioOrder.forEach(p=>prioCount[p]=0);
-  ATIVIDADES.forEach(a=>{prioCount[a.prioridade]=(prioCount[a.prioridade]||0)+1;});
-  prioridadeChartInst = new Chart(document.getElementById('prioridadeChart'), {
-    type:'bar',
-    data:{labels:prioOrder, datasets:[{data:prioOrder.map(p=>prioCount[p]), backgroundColor:prioOrder.map(p=>prioColors[p]), borderRadius:6, maxBarThickness:40}]},
-    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-      scales:{x:{ticks:{color:'#5b7290', font:{size:10.5}}, grid:{display:false}}, y:{ticks:{color:'#5b7290', stepSize:1}, grid:{color:'#eaf1f8'}}}}
-  });
+  // --- Atividades por dia
+  const dias=[...new Set(ATIVIDADES.map(a=>a.dia))].sort((x,y)=>(x===''?1:0)-(y===''?1:0)||x.localeCompare(y));
+  chartInsts.push(new Chart(document.getElementById('diaChart'),{
+    type:'bar', plugins:[segLabels],
+    data:{labels:dias.map(d=>d?fmtDiaCurto(d):'A definir'), datasets:dsDoneOpen(dias.map(d=>ATIVIDADES.filter(a=>a.dia===d&&feita(a)).length), dias.map(d=>ATIVIDADES.filter(a=>a.dia===d&&!feita(a)).length))},
+    options:{...baseOpts, scales:stackScales(false)}
+  }));
+
+  // --- Carga por pessoa
+  const pessoas={};
+  ATIVIDADES.forEach(a=>{ new Set([...nomesDe(a.responsavel),...nomeDe(a.apoio)]).forEach(n=>{ const o=pessoas[n]=pessoas[n]||{f:0,o:0}; feita(a)?o.f++:o.o++; }); });
+  const nomes=Object.keys(pessoas).sort((x,y)=>(pessoas[y].f+pessoas[y].o)-(pessoas[x].f+pessoas[x].o));
+  chartInsts.push(new Chart(document.getElementById('pessoaChart'),{
+    type:'bar', plugins:[segLabels],
+    data:{labels:nomes, datasets:dsDoneOpen(nomes.map(n=>pessoas[n].f), nomes.map(n=>pessoas[n].o))},
+    options:{...baseOpts, indexAxis:'y', scales:stackScales(true)}
+  }));
+
+  // --- Prioridade
+  const prioOrder=['Crítica','Alta','Média','Baixa'].filter(p=>ATIVIDADES.some(a=>a.prioridade===p));
+  chartInsts.push(new Chart(document.getElementById('prioridadeChart'),{
+    type:'bar', plugins:[segLabels],
+    data:{labels:prioOrder, datasets:dsDoneOpen(prioOrder.map(p=>ATIVIDADES.filter(a=>a.prioridade===p&&feita(a)).length), prioOrder.map(p=>ATIVIDADES.filter(a=>a.prioridade===p&&!feita(a)).length))},
+    options:{...baseOpts, scales:stackScales(false)}
+  }));
+
+  // --- Lista em aberto
+  const rank={'Crítica':0,'Alta':1,'Média':2,'Baixa':3};
+  const abertas=ATIVIDADES.filter(a=>!feita(a)).sort((x,y)=>(x.dia===''?1:0)-(y.dia===''?1:0)||x.dia.localeCompare(y.dia)||(rank[x.prioridade]-rank[y.prioridade])||x.id-y.id);
+  document.getElementById('abertasSub').textContent=abertas.length+' atividade(s) a finalizar — ordenadas por data e prioridade';
+  document.getElementById('abertasList').innerHTML = abertas.length ? '<div class="ab-scroll">'+abertas.map(a=>`
+    <div class="ab-row">
+      <div class="ab-id">#${a.id}</div>
+      <div class="ab-title">${a.desc}</div>
+      <span class="ab-day ${a.dia?'':'nodate'}">${a.dia?fmtDiaCurto(a.dia):'A definir'}</span>
+      <div class="ab-meta">
+        <span class="badge ${badgeClass(a.prioridade)}">${a.prioridade}</span>
+        <span>👤 ${nomesDe(a.responsavel).join(' + ')||a.responsavel}${nomeDe(a.apoio).length?' · apoio: '+nomeDe(a.apoio).join(', '):''}</span>
+        <span style="color:${COR_STATUS[a.status]||'#5b7290'}; font-weight:700;">● ${a.status}</span>
+      </div>
+    </div>`).join('')+'</div>' : '<div style="padding:18px 0; color:var(--green); font-weight:700;">✓ Tudo concluído!</div>';
 }
 
 function renderTimeline(){
