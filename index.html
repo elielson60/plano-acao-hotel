@@ -362,7 +362,6 @@
     </div>
   </div>
   <div class="cv-prog"><div class="cv-prog-fill" id="cvFill"></div></div>
-  <div class="cv-days" id="cvDays"></div>
   <div class="cv-meta">
     <span><i>Empresas</i>Hotel Privê do Atalaia + Restaurante Do Mar</span>
     <span><i>Execução técnica</i>Elielson Nascimento (TI) + Cleiton Santos (Infra)</span>
@@ -373,10 +372,8 @@
 <div class="topnav">
   <div class="topnav-inner">
     <a href="#visao-geral">Visão Geral</a>
-    <a href="#cronograma">Cronograma</a>
     <a href="#responsabilidades">Responsabilidades</a>
     <a href="#checklist">Checklist</a>
-    <a href="#riscos">Riscos</a>
     <a href="#insights">Insights</a>
     <a href="#resultados">Resultados</a>
   </div>
@@ -404,15 +401,6 @@
       <div class="card dash-prio"><h3>Por prioridade</h3><div class="sub">Executadas x a finalizar</div><div class="chart-box"><canvas id="prioridadeChart"></canvas></div></div>
       <div class="card dash-abertas"><h3>Em aberto — o que falta finalizar</h3><div class="sub" id="abertasSub">Ordenado por data e prioridade</div><div id="abertasList"></div></div>
     </div>
-  </div>
-
-  <div class="section" id="cronograma">
-    <div class="section-head">
-      <div class="tag">Linha do Tempo</div>
-      <h2>Cronograma diário — 10 a 20/11/2026</h2>
-      <p>Atividades distribuídas por dia, considerando dependências técnicas (ex: cabeamento antes de instalar roteadores). Horário de início/término: <b style="color:var(--navy)">a definir com cada responsável</b>.</p>
-    </div>
-    <div class="card"><div id="cronoResumo"></div><div id="timelineList"></div></div>
   </div>
 
   <div class="section" id="responsabilidades">
@@ -447,20 +435,6 @@
       <p>Use este checklist durante a viagem para marcar o que já foi executado em campo — útil como evidência rápida de execução.</p>
     </div>
     <div class="card"><div id="checklistContainer"></div></div>
-  </div>
-
-  <div class="section" id="riscos">
-    <div class="section-head">
-      <div class="tag">Análise de Riscos</div>
-      <h2>Matriz de riscos operacionais</h2>
-      <p>Principais riscos identificados para a operação durante a viagem, com plano de contingência.</p>
-    </div>
-    <div class="card">
-      <div class="risk-row" style="font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--muted); border-bottom:2px solid var(--border);">
-        <div>Risco</div><div>Impacto</div><div>Probabilidade</div><div>Criticidade</div><div>Plano de Contingência</div>
-      </div>
-      <div id="riskMatrix"></div>
-    </div>
   </div>
 
   <div class="section" id="insights">
@@ -716,15 +690,6 @@ function renderCover(){
   if(iso<ini){ dEl.textContent='D-'+Math.ceil((new Date(ini)-new Date(iso))/864e5); dL.textContent='para iniciar'; }
   else if(iso>fim){ dEl.textContent='Fim'; dL.textContent='viagem encerrada'; }
   else { dEl.textContent=(parseInt(iso.slice(8))-9)+'/11'; dL.textContent='dia da viagem (de 11)'; }
-  let html='';
-  for(let d=10; d<=20; d++){
-    const k='2026-11-'+String(d).padStart(2,'0');
-    const l=ATIVIDADES.filter(a=>a.dia===k), f=l.filter(a=>a.status==='Concluído').length;
-    const cls=(k===iso?' today':(k<iso?' past':''));
-    const c=l.length?`<div class="c ${f===l.length?'ok':''}">${f===l.length?'✓ ':''}${f}/${l.length}</div>`:'<div class="c">&nbsp;</div>';
-    html+=`<div class="cv-day${cls}"><div class="n">${d}</div><div class="m">${['dom','seg','ter','qua','qui','sex','sáb'][new Date(k+'T12:00:00').getDay()]}</div>${c}</div>`;
-  }
-  document.getElementById('cvDays').innerHTML=html;
 }
 function renderCharts(){
   chartInsts.forEach(c=>{ if(c) c.destroy(); }); chartInsts=[];
@@ -970,17 +935,6 @@ document.getElementById('checklistContainer').addEventListener('change', e=>{
   }
 });
 
-// ===== Risk matrix =====
-document.getElementById('riskMatrix').innerHTML = RISCOS.map(r=>`
-  <div class="risk-row">
-    <div class="rtitle">${r.risco}</div>
-    <div class="rtext">${r.impacto}</div>
-    <div class="rtext">${r.probabilidade}</div>
-    <div><span class="crit-tag ${r.criticidade==='Crítico'?'critico':(r.criticidade==='Alto'?'alto':'medio')}">${r.criticidade}</span></div>
-    <div class="rtext">${r.contingencia}</div>
-  </div>
-`).join('');
-
 // ===== Insights =====
 function renderInsights(agg){
   const insights = [
@@ -1000,7 +954,6 @@ function renderInsights(agg){
 function renderAll(){
   const agg = computeAgg();
   renderKPIs(agg); renderCover(); renderCharts();
-  renderTimeline();
   renderTable();
   renderChecklist();
   renderInsights(agg);
